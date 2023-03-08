@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef MY_UTIL_H
+#define MY_UTIL_H
 /**
  * general uitlty
  */
@@ -185,43 +185,47 @@ struct pair {
     }
 };
 
-// reload compare operator
-// lexicographically compares the values in the pair
+/**
+ * @brief
+ * reload compare operator
+ * lexicographically compares the values in the pair
+ */
+
 // reload ==
 template <class Ty1, class Ty2>
-bool operator==(const pair<Ty1, Ty2>& larg, const pair<Ty1, Ty2>& rarg) {
-    return larg.first == rarg.first && larg.second == rarg.second;
+bool operator==(const pair<Ty1, Ty2>& lhs, const pair<Ty1, Ty2>& rhs) {
+    return lhs.first == rhs.first && lhs.second == rhs.second;
 }
 // reload != 
 template <class Ty1, class Ty2>
-bool operator!=(const pair<Ty1, Ty2>& larg, const pair<Ty1, Ty2>& rarg) {
-    return !(larg == rarg);
+bool operator!=(const pair<Ty1, Ty2>& lhs, const pair<Ty1, Ty2>& rhs) {
+    return !(lhs == rhs);
 }
 // reload <
 template <class T1, class T2>
-bool operator<(const pair<T1, T2>& larg, const pair<T1, T2>& rarg) {
-    return larg.first < rarg.first || (larg.first == rarg.first &&
-                                       larg.second < rarg.second);
+bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+    return lhs.first < rhs.first || (lhs.first == rhs.first &&
+                                       lhs.second < rhs.second);
 }
 // reload <=
 template <class T1, class T2>
-bool operator<=(const pair<T1, T2>& larg, const pair<T1, T2>& rarg) {
-    return !(rarg < larg);
+bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+    return !(rhs < lhs);
 }
 // reload >
 template <class Ty1, class Ty2>
-bool operator>(const pair<Ty1, Ty2>& larg, const pair<Ty1, Ty2>& rarg) {
-    return rarg < larg;
+bool operator>(const pair<Ty1, Ty2>& lhs, const pair<Ty1, Ty2>& rhs) {
+    return rhs < lhs;
 }
 // reload >=
 template <class Ty1, class Ty2>
-bool operator>=(const pair<Ty1, Ty2>& larg, const pair<Ty1, Ty2>& rarg) {
-    return !(larg < rarg);
+bool operator>=(const pair<Ty1, Ty2>& lhs, const pair<Ty1, Ty2>& rhs) {
+    return !(lhs < rhs);
 }
 // reload MySTL::swap
 template <class Ty1, class Ty2>
-void swap(pair<Ty1, Ty2>& larg, pair<Ty1, Ty2>& rarg) {
-    larg.swap(rarg);
+void swap(pair<Ty1, Ty2>& lhs, pair<Ty1, Ty2>& rhs) {
+    lhs.swap(rhs);
 }
 
 // 两个变量成为pair
@@ -232,4 +236,4 @@ pair< T1,  T2> make_pair(T1&&first, T2&&second){
 
 }  // namespace MySTL
 
-#endif /*UTIL_H*/
+#endif /* MY_UTIL_H */
