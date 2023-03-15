@@ -3,6 +3,7 @@
 #include "construct.h"
 #include "type_traits.h"
 #include "util.h"
+#include <memory>
 
 namespace MySTL {
 
@@ -49,7 +50,6 @@ void allocator<T>::deallocate(T* ptr) {
     }
     return;
 }
-
 template <class T>
 void allocator<T>::deallocate(T* ptr, size_type) {
     if (ptr != nullptr) {
@@ -57,9 +57,10 @@ void allocator<T>::deallocate(T* ptr, size_type) {
     }
     return;
 }
+
 template <class T>
 void allocator<T>::construt(T* ptr) {
-    construct(ptr);
+    MySTL::construct(ptr);
 }
 template <class T>
 void allocator<T>::construt(T* ptr, const T& value) {
@@ -70,13 +71,13 @@ void allocator<T>::construt(T* ptr, T&& value) {
     MySTL::construct(ptr, MySTL::move(value));
 }
 template <class T>
-template <class ...Args>
+template <class... Args>
 void allocator<T>::construt(T* ptr, Args&&... args) {
     MySTL::construct(ptr, MySTL::forward<Args>(args)...);
 }
 
 template <class T>
-void allocator<T>::destory(T*ptr){
+void allocator<T>::destory(T* ptr) {
     MySTL::destory(ptr);
 }
 

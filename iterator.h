@@ -126,13 +126,13 @@ iterator_category(const Iterator&) {
 // 萃取distance_type
 template <class Iterator>
 typename iterator_traits<Iterator>::difference_type*
-iterator_category(const Iterator&) {
+distance_type(const Iterator&) {
     return static_cast<typename iterator_traits<Iterator>::difference_eype*>(0);
 }
 // 萃取value_type
 template <class Iterator>
 typename iterator_traits<Iterator>::value_type*
-iterator_category(const Iterator&) {
+value_type(const Iterator&) {
     return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
 }
 /**

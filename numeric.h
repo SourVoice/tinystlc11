@@ -24,9 +24,10 @@ T accumulat(InputIter first, InputIter last, T init, BinaryOperation op){
         init = op(MySTL::move(init), *first);
 }
 
-// TODO: 检查
+// XXX: 使用移动语义部分待检查
 /**
  * @brief adjacent_difference(), 计算区间内相邻元素差值, 保存至result起始位置
+ * 该实现抄自cppreference网站
  */
 template <class InputIter, class OutputIter>
 OutputIter adjacent_difference(InputIter first, InputIter last, OutputIter result) {
@@ -43,7 +44,7 @@ OutputIter adjacent_difference(InputIter first, InputIter last, OutputIter resul
     return ++result;
 }
 // 针对BinaryOperation版本
-// TODO: 需要检查
+// XXX: 使用移动语义部分待检查
 template <class InputIter, class OutputIter, class BinaryOperation>
 OutputIter adjacent_difference(InputIter first, InputIter last, OutputIter result, BinaryOperation op) {
     if (first == last) return result;
@@ -52,7 +53,7 @@ OutputIter adjacent_difference(InputIter first, InputIter last, OutputIter resul
     *result = acc;
     while (++first != last) {
 			value_type val = *first;
-        *++first = op(val - MySTL::move(acc));
+        *++result = op(val - MySTL::move(acc));
         acc = MySTL::move(val);
     }
     return ++result;
@@ -85,7 +86,6 @@ T inner_product(InputIter1 first1, InputIter1 last1, InputIter2 first2, T init,
     return init;
 }
 
-// TODO: iota(), 检查
 /**
  * @brief 对[first, last) 内元素使用value递增填充
  */
@@ -98,7 +98,7 @@ void iota(ForwardIter first, ForwardIter last, T value) {
     }
 }
 
-// TODO: 待检查, MySTL::move()的调用可能未明确
+// XXX: 待检查, MySTL::move()的调用可能未明确
 /**
  * @brief parital_sum(), 进行局部累加求和, 结果放到result区间内
  */

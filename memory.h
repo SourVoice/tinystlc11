@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdlib>
 #include <climits>
-#include <memory>
 
 #include "myallocator.h"
 #include "util.h"
@@ -23,8 +22,8 @@ constexpr Tp* address_of(Tp& value) noexcept {
 // 获取临时缓冲区
 template <class T>
 pair<T*, ptrdiff_t> get_buffer_helper(ptrdiff_t len, T*) {
-    if (len > static_cast<ptrdiff_t>(INT_MAX / sizeof T))
-        len = INT_MAX / sizeof T;
+    if (len > static_cast<ptrdiff_t>(INT_MAX / sizeof(T)))
+        len = INT_MAX / sizeof(T);
     while (len > 0) {
         T* tmp = static_cast<T*>(malloc(static_cast<size_t>(len) * sizeof(T)));
         if (tmp) return pair<T*, ptrdiff_t>(tmp, len);
@@ -132,10 +131,10 @@ public:
     T& operator*() const { return *m_ptr; }
     T& operator->() const { return m_ptr; }
 
-    T* get() const {return m_ptr};
+    T* get() const {return m_ptr;};
     T* release() {
         T* tmp = m_ptr;
-        m_ptrl = nullptr;
+        m_ptr = nullptr;
         return tmp;
     }
 

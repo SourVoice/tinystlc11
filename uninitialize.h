@@ -62,7 +62,7 @@ unchecked_uninitialized_copy_n(InputIter first, InputIter last, Size n, ForwardI
         for (; result != cur; cur--)
             MySTL::destory(&*result);
     }
-    rturn cur;
+    return cur;
 }
 
 /**
@@ -189,7 +189,7 @@ ForwardIter unchecked_unitialized_move_n(InputIter first, Size n,
 template <class InputIter, class Size, class ForwardIter>
 ForwardIter uninitialized_move_n(InputIter first, Size n,
                                  ForwardIter result) {
-    return unchecked_uninitialized_move_n(first, n, result, std::is_trivially_move_assignable<typename iterator_traits<ForwardIter>::value_type>{})
+    return unchecked_uninitialized_move_n(first, n, result, std::is_trivially_move_assignable<typename iterator_traits<ForwardIter>::value_type>{});
 }
 
 } // namespace MySTL
