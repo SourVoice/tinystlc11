@@ -156,17 +156,13 @@ distance_dispatch(RandomIter first, RandomIter last, random_access_iterator_tag)
     return last - first;
 }
 
+// advance
 template <class InputIter>
 typename iterator_traits<InputIter>::difference_type
 distance(InputIter first, InputIter last) {
     return distance_dispatch(first, last, iterator_category(first));
 }
 
-/**
- * @brief
- * 迭代器前进 n 个距离
- * advance
- */
 // 输入迭代器版本
 template <class InputIter, class Distance>
 void advance_dispatch(InputIter& i, Distance n, input_iterator_tag) {
@@ -190,8 +186,11 @@ void advance_dispatch(RandomIter& i, Distance n, random_access_iterator_tag) {
     i += n;
 }
 
+/**
+ * @brief 迭代器前进 n 个距离
+ */
 template <class InputIter, class Distance>
-void advance_dispatch(InputIter& i, Distance n) {
+void advance(InputIter& i, Distance n) {
     advance_dispatch(i, n, iterator_category(i));
 }
 

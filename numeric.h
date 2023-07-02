@@ -53,7 +53,7 @@ OutputIter adjacent_difference(InputIter first, InputIter last, OutputIter resul
     *result = acc;
     while (++first != last) {
 			value_type val = *first;
-        *++result = op(val - MySTL::move(acc));
+        *++result = op(val, MySTL::move(acc));
         acc = MySTL::move(val);
     }
     return ++result;
