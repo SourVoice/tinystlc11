@@ -2,19 +2,20 @@
 #define MY_ALGO_H
 
 // 该头文件包含MySTL中的全部算法
-// TODO: 待实现 heap_algo.h
-// TODO: 待实现 set_algo.h
+
+#include <cstddef>
+#include <cstdlib>
+#include <ctime>
+
 #include "algobase.h"
 #include "heap_algo.h"
 #include "iterator.h"
 #include "memory.h"
 #include "functional.h"
 #include "util.h"
-#include <cstdlib>
-#include <memory>
 
 namespace MySTL {
-/*
+/**
  * @brief 检查[first, last)内是否全部元素都满足一元操作 unary_pred 为 true 的情况，满足则返回 true
  */
 template <class InputIter, class UnaryPredicate>
@@ -451,7 +452,7 @@ lbound_dispatch(RandIter first, RandIter last, const T& value, random_access_ite
     return first;
     ;
 }
-/*
+/**
  * @brief 在[first, last)中查找第一个不小于 value 的元素，并返回指向它的迭代器，若没有则返回 last
  */
 template <class ForwardIter, class T>
@@ -508,7 +509,7 @@ lbound_dispatch(RandIter first, RandIter last, const T& value, random_access_ite
     }
     return first;
 }
-/*
+/**
  * @brief lower_bound 使用 comp 重载的版本
  */
 template <class ForwardIter, class T, class Compare>
@@ -662,6 +663,9 @@ erange_dispatch(ForwardIter first, ForwardIter last, const T& value, forward_ite
     auto half = len;
     ForwardIter mid, left, right;
     while (len > 0) {
+        half = len >> 1;
+        mid = first;
+        MySTL::advance(mid, half);
         if (*mid < value) {
             first = mid;
             ++first;
@@ -921,9 +925,8 @@ const T& median(const T& left, const T& mid, const T& right) {
         return mid;
 }
 
-// 重载版本使用函数comp代替比较操作
 /**
- * @brief 找出三个值的中间值
+ * @brief 找出三个值的中间值, 重载版本使用函数comp代替比较操作
  */
 template <class T, class Compare>
 const T& median(const T& left, const T& mid, const T& right, Compare cmp) {
@@ -1326,13 +1329,1004 @@ rotate_copy(ForwardIter first, ForwardIter mid,
             ForwardIter last, OutputIter result) {
     return MySTL::copy(first, last, MySTL::copy(mid, last, result));
 }
-// TODO: is_permutation() 
+
+/*****************************************************************************************/
+//  is_permutation
+//  判断[first1,last1)是否为[first2, last2)的排列组合
+/*****************************************************************************************/
+template <class ForwardIter1, class ForwardIter2, class BinaryPred>
+bool is_permutation_aux(ForwardIter1 first1, ForwardIter2 last1,
+                        ForwardIter2 first2, ForwardIter2 last2,
+                        BinaryPred pred) {
+    constexpr bool is_ra_it = MySTL::is_random_access_iterator<ForwardIter1>::value &&
+                              MySTL::is_random_access_iterator<ForwardIter2>::value;
+    if (is_ra_it) {
+        auto len1 = last1 - first1;
+        auto len2 = last2 - first2;
+        if (len1 != len2) return false;
+    }
+
+    // 找到相同前缀段
+    for (; first1 != last1 && first2 != last2; ++first1, (void)++first2) {
+        if (!pred(*first1, *first2))
+            break;
+    }
+    if (is_ra_it) {
+        if (first1 == last1) return true;
+    } else {
+        auto len1 = MySTL::distance(first1, last1);
+        auto len2 = MySTL::distance(first2, last2);
+        if (len1 == 0 && len2 == 0) return true;
+        if (len1 != len2) return false;
+    }
+
+    for (auto i = first1; i != last1; i++) {
+        bool is_repeated = false;
+
+        // 寻找重复
+        for (auto j = first1; j != i; j++) {
+            if (pred(*j, *i)) {
+                is_repeated = true;
+                break;
+            }
+        }
+
+        if (!is_repeated) {
+            // 计算 *i 在 [first2, last2) 中出现的次数
+            auto c2 = 0;
+            for (auto j = first2; j != last2; j++) {
+                if (pred(*i, *j)) {
+                    ++c2;
+                }
+            }
+            if (c2 == 0) return false;
+
+            // 计算 *i 在 [first1, last1) 中出现的次数
+            auto c1 = 1;
+            auto j = i;
+            for (++j; j != last1; j++) {
+                if (pred(*i, *j)) {
+                    ++c1;
+                }
+            }
+            if (c1 != c2)
+                return false;
+        }
+    }
+    return true;
+}
+
 /**
- * @brief 判断[first1,last1)是否为[first2, last2)的排列组合 
+ * @brief 判断[first1,last1)是否为[first2, last2)的排列组合， 并以二元谓词 pred 作为比较标准
  */
+template <class ForwardIter1, class ForwardIter2, class BinaryPred>
+bool is_permutation(ForwardIter1 first1, ForwardIter1 last1,
+                    ForwardIter2 first2, ForwardIter2 last2,
+                    BinaryPred pred) {
+    return MySTL::is_permutation_aux(first1, last1, first2, last2, pred);
+}
 
+/**
+ * @brief 判断[first1,last1)是否为[first2, last2)的排列组合
+ */
+template <class ForwardIter1, class ForwardIter2>
+bool is_permutation(ForwardIter1 first1, ForwardIter1 last1,
+                    ForwardIter2 first2, ForwardIter2 last2) {
+    typedef typename iterator_traits<ForwardIter1>::value_type v1;
+    typedef typename iterator_traits<ForwardIter2>::value_type v2;
+    static_assert(std::is_same<v1, v2>::value,
+                  "the value type of ForwardIter1 and ForwardIter2 must be same");
+    return MySTL::is_permutation_aux(first1, last1, first2, last2,
+                                     MySTL::equal_to<v1>());
+}
 
+// next_permutation
+/**
+ * @brief 将 [first, last) 的下一个排列组合存储于 [first, last) 中, 如果不存在下一个排列组合, 则返回 false
+ */
+template <class BidrectionalIter>
+bool next_permutation(BidrectionalIter first, BidrectionalIter last) {
+    auto i = last;
+    if (first == last || first == --i)
+        return false;
 
+    for (;;) {
+        auto ii = i;
+        if (*--i < *ii) {
+            auto j = last;
+            while (!(*i < *--j)) {  // 找到大于 *i 的元素
+            }
+            MySTL::iter_swap(i, j);
+            MySTL::reverse(ii, last);
+            return true;
+        }
+        if (i == first) {
+            MySTL::reverse(first, last);
+            return false;
+        }
+    }
+}
+
+/**
+ * @brief next_permutation 的重载版本, 使用 comp 作为比较标准
+ */
+template <class BidrectionalIter, class Compare>
+bool next_permutation(BidrectionalIter first, BidrectionalIter last, Compare comp) {
+    auto i = last;
+    if (first == last || first == --i)
+        return false;
+
+    for (;;) {
+        auto ii = i;
+        if (comp(*--i, *ii)) {
+            auto j = last;
+            while (!comp(*i < *--j)) {
+
+                MySTL::iter_swap(i, j);
+                MySTL::reverse(ii, last);
+                return true;
+            }
+            if (i == first) {
+                MySTL::reverse(first, last);
+                return false;
+            }
+        }
+    }
+}
+
+// prev_permutation
+/**
+ * @brief 将 [first, last) 的上一个排列组合存储于 [first, last) 中, 如果不存在上一个排列组合, 则返回 false
+ */
+template <class BidrectionalIter>
+bool prev_permutation(BidrectionalIter first, BidrectionalIter last) {
+    auto i = last;
+    if (first == last || first == --i)
+        return false;
+
+    for (;;) {
+        auto ii = i;
+        if (*ii < *--i) {
+            auto j = last;
+            while (!(*i > *--j)) {  // 找到大于 *i 的元素
+            }
+            MySTL::iter_swap(i, j);
+            MySTL::reverse(ii, last);
+            return true;
+        }
+        if (i == first) {
+            MySTL::reverse(first, last);
+            return false;
+        }
+    }
+}
+
+/**
+ * @brief prev_permutation 的重载版本, 使用 comp 作为比较标准
+ */
+template <class BidrectionalIter, class Compare>
+bool prev_permutation(BidrectionalIter first, BidrectionalIter last, Compare comp) {
+    auto i = last;
+    if (first == last || first == --i)
+        return false;
+
+    for (;;) {
+        auto ii = i;
+        if (*ii < *--i) {
+            auto j = last;
+            while (!comp(*i > *--j)) {
+            }
+            MySTL::iter_swap(i, j);
+            MySTL::reverse(ii, last);
+            return true;
+        }
+        if (i == first) {
+            MySTL::reverse(first, last);
+            return false;
+        }
+    }
+}
+
+// merge
+/**
+ * @brief 将两个有序序列 [first1, last1) 和 [first2, last2) 合并存储于以 result 为起始的序列中
+ * 返回一个迭代器指向存储的最后一个元素的下一个位置
+ */
+template <class InputIter1, class InputIter2, class OutputIter>
+OutputIter merge(InputIter1 first1, InputIter1 last1,
+                 InputIter2 first2, InputIter2 last2,
+                 OutputIter result) {
+    while (first1 != last1 && first2 != last2) {
+        if (*first2 < *first1) {
+            *result = *first2;
+            ++first2;
+        } else {
+            *result = *first1;
+            ++first1;
+        }
+        ++result;
+    }
+    return MySTL::copy(first2, last2, MySTL::copy(first1, last1, result));
+}
+
+/**
+ * @brief merge 的重载版本, 使用 comp 作为比较标准
+ */
+template <class InputIter1, class InputIter2, class OutputIter, class Compare>
+OutputIter merge(InputIter1 first1, InputIter1 last1,
+                 InputIter2 first2, InputIter2 last2,
+                 OutputIter result, Compare comp) {
+    while (first1 != last1 && first2 != last2) {
+        if (comp(*first2, *first1)) {
+            *result = *first2;
+            ++first2;
+        } else {
+            *result = *first1;
+            ++first1;
+        }
+        ++result;
+    }
+    return MySTL::copy(first2, last2, MySTL::copy(first1, last1, result));
+}
+
+/*****************************************************************************************/
+// inplace_merge and its auxiliary functions
+// 把连接在一起的两个有序序列结合成单一序列并保持有序
+/*****************************************************************************************/
+template <class BidrectionalIter, class Distance>
+void merge_without_buffer(BidrectionalIter first, BidrectionalIter middle,
+                          BidrectionalIter last, Distance len1, Distance len2) {
+    if (len1 == 0 || len2 == 0)
+        return;
+
+    if (len1 + len2 == 2)
+    {
+        if (*middle < *first)
+            MySTL::iter_swap(first, middle);
+        return;
+    }
+    auto first_cnt = first;
+    auto second_cnt = middle;
+    Distance len11 = 0;
+    Distance len22 = 0;
+    if (len1 > len2) {
+        len11 = len1 >> 1;
+        MySTL::advance(first_cnt, len11);
+        second_cnt = MySTL::lower_bound(middle, last, *first_cnt);
+        len22 = MySTL::distance(middle, second_cnt);
+    } else {
+        len22 = len2 >> 1;
+        MySTL::advance(second_cnt, len22);
+        first_cnt = MySTL::upper_bound(first, middle, *second_cnt);
+        len11 = MySTL::distance(first, first_cnt);
+    }
+    auto new_middle = MySTL::rotate(first_cnt, middle, second_cnt);
+    MySTL::merge_without_buffer(first, first_cnt, new_middle, len11, len22);
+    MySTL::merge_without_buffer(new_middle, second_cnt, last, len1 - len11, len2 - len22);
+}
+
+template <class BidrectionalIter1, class BidrectionalIter2>
+BidrectionalIter1
+merge_backward(BidrectionalIter1 first1, BidrectionalIter1 last1,
+               BidrectionalIter2 first2, BidrectionalIter2 last2,
+               BidrectionalIter1 result) {
+    if (first1 == last1)
+        return MySTL::copy_backward(first2, last2, result);
+
+    if (first2 == last2)
+        return MySTL::copy_backward(first1, last1, result);
+    --last1;
+    --last2;
+
+    while (true) {
+        if (*last2 < *last1) {
+            *--result == *last1;
+            if (first1 == last1)
+                return MySTL::copy_backward(first2, ++last2, result);
+            --last1;
+        } else {
+            *--result = *last2;
+            if (first2 == last2)
+                return MySTL::copy_backward(first1, ++last1, result);
+            --last2;
+        }
+    }
+}
+
+template <class BidrectionalIter1, class BidrectionalIter2, class Distance>
+BidrectionalIter1
+rotate_adaptive(BidrectionalIter1 first, BidrectionalIter1 middle,
+                BidrectionalIter1 last, Distance len1, Distance len2,
+                BidrectionalIter2 buffer, Distance buffer_size) {
+
+    BidrectionalIter2 buffer_end;
+    if (len1 > len2 && len2 <= buffer_size) {  // 缓冲区足够大, 放置序列 2
+        buffer_end = MySTL::copy(middle, last, buffer);
+        MySTL::copy_backward(first, middle, last);
+    } else if (len1 <= buffer_size) {  // 缓冲区足够大, 放置序列 1
+        buffer_end = MySTL::copy(first, middle, buffer);
+        MySTL::copy(middle, last, first);
+    } else {  // 缓冲区不够大, 调用rotat， 不使用缓冲区
+        MySTL::rotate(first, middle, last);
+        return first + (last - middle);
+    }
+}
+
+// 有缓冲区的情况下合并
+template <class BidrectionalIter, class Distance, class Pointer>
+void merge_adaptive(BidrectionalIter first, BidrectionalIter middle,
+                    BidrectionalIter last, Distance len1, Distance len2,
+                    Pointer buffer, Distance buffer_size) {
+
+    // 区间长度足够放入缓冲区
+    if (len1 <= len2 && len1 <= buffer_size) {
+        Pointer buffer_end = MySTL::copy(first, middle, buffer);
+        MySTL::merge(buffer, buffer_end, middle, last, first);
+    } else if (len2 <= buffer_size) {
+        Pointer buffer_end = MySTL::copy(middle, last, buffer);
+        MySTL::merge_backward(first, middle, buffer, buffer_end, last);
+    } else {
+        auto first_cnt = first;
+        auto second_cnt = middle;
+        Distance len11 = 0;
+        Distance len22 = 0;
+        if (len1 > len2) {
+            len11 = len1 >> 1;
+            MySTL::advance(first_cnt, len11);
+            second_cnt = MySTL::lower_bound(middle, last, *first_cnt);
+            len22 = MySTL::distance(middle, second_cnt);
+        } else {
+            len22 = len2 >> 1;
+            MySTL::advance(second_cnt, len22);
+            first_cnt = MySTL::upper_bound(first, middle, *second_cnt);
+            len11 = MySTL::distance(first, first_cnt);
+        }
+        auto new_middle = MySTL::rotate_adaptive(first_cnt, middle, second_cnt, len1 - len11, len2 - len22, buffer, buffer_size);
+        MySTL::merge_adaptive(first, first_cnt, new_middle, len11, len22, buffer, buffer_size);
+        MySTL::merge_adaptive(new_middle, second_cnt, last, len1 - len11, len2 - len22, buffer, buffer_size);
+    }
+}
+
+template <class BidrectionalIter, class T>
+void inplace_merge_aux(BidrectionalIter first, BidrectionalIter middle, BidrectionalIter last, T*) {
+    auto len1 = MySTL::distance(first, middle);
+    auto len2 = MySTL::distance(middle, last);
+    temporary_buffer<BidrectionalIter, T> buf(first, last);
+    if (!buf.begin()) {
+        MySTL::merge_without_buffer(first, middle, last, len1, len2);
+    } else {
+        MySTL::merge_adaptive(first, middle, last, len1, len2, buf.begin(), buf.size());
+    }
+}
+
+/**
+ * @brief 将两个已排序的序列[first,middle)和[middle,last)合并成单一有序序列.
+ * 若原来是增序，现在也是递增排序，若原来是递减排序，现在也是递减排序
+ */
+template <class BidrectionalIter>
+void inplace_merge(BidrectionalIter first, BidrectionalIter middle, BidrectionalIter last) {
+    if (first == middle || middle == last)
+        return;
+    MySTL::inplace_merge_aux(first, middle, last, value_type(first));
+}
+
+// merge_without_buffer 重载版本，使用函数对象 comp 代替比较操作
+template <class BidrectionalIter, class Distance, class Compared>
+void merge_without_buffer(BidrectionalIter first, BidrectionalIter middle,
+                          BidrectionalIter last, Distance len1, Distance len2,
+                          Compared comp) {
+    if (len1 == 0 || len2 == 0)
+        return;
+
+    if (len1 + len2 == 2)
+    {
+        if (comp(*middle, *first))
+            MySTL::iter_swap(first, middle);
+        return;
+    }
+    auto first_cnt = first;
+    auto second_cnt = middle;
+    Distance len11 = 0;
+    Distance len22 = 0;
+    if (len1 > len2) {
+        len11 = len1 >> 1;
+        MySTL::advance(first_cnt, len11);
+        second_cnt = MySTL::lower_bound(middle, last, *first_cnt, comp);
+        len22 = MySTL::distance(middle, second_cnt);
+    } else {
+        len22 = len2 >> 1;
+        MySTL::advance(second_cnt, len22);
+        first_cnt = MySTL::upper_bound(first, middle, *second_cnt, comp);
+        len11 = MySTL::distance(first, first_cnt);
+    }
+    auto new_middle = MySTL::rotate(first_cnt, middle, second_cnt);
+    MySTL::merge_without_buffer(first, first_cnt, new_middle, len11, len22, comp);
+    MySTL::merge_without_buffer(new_middle, second_cnt, last, len1 - len11, len2 - len22, comp);
+}
+
+// merge_backward 重载版本，使用函数对象 comp 代替比较操作
+template <class BidrectionalIter1, class BidrectionalIter2, class Compare>
+BidrectionalIter1
+merge_backward(BidrectionalIter1 first1, BidrectionalIter1 last1,
+               BidrectionalIter2 first2, BidrectionalIter2 last2,
+               BidrectionalIter1 result, Compare comp) {
+    if (first1 == last1)
+        return MySTL::copy_backward(first2, last2, result);
+
+    if (first2 == last2)
+        return MySTL::copy_backward(first1, last1, result);
+    --last1;
+    --last2;
+
+    while (true) {
+        if (comp(*last2, *last1)) {
+            *--result == *last1;
+            if (first1 == last1)
+                return MySTL::copy_backward(first2, ++last2, result);
+            --last1;
+        } else {
+            *--result = *last2;
+            if (first2 == last2)
+                return MySTL::copy_backward(first1, ++last1, result);
+            --last2;
+        }
+    }
+}
+
+// merge_adaptive 重载版本，使用函数对象 comp 代替比较操作
+template <class BidrectionalIter, class Distance, class Pointer, class Compare>
+void merge_adaptive(BidrectionalIter first, BidrectionalIter middle,
+                    BidrectionalIter last, Distance len1, Distance len2,
+                    Pointer buffer, Distance buffer_size, Compare comp) {
+
+    // 区间长度足够放入缓冲区
+    if (len1 <= len2 && len1 <= buffer_size) {
+        Pointer buffer_end = MySTL::copy(first, middle, buffer);
+        MySTL::merge(buffer, buffer_end, middle, last, first, comp);
+    } else if (len2 <= buffer_size) {
+        Pointer buffer_end = MySTL::copy(middle, last, buffer);
+        MySTL::merge_backward(first, middle, buffer, buffer_end, last, comp);
+    } else {
+        auto first_cnt = first;
+        auto second_cnt = middle;
+        Distance len11 = 0;
+        Distance len22 = 0;
+        if (len1 > len2) {
+            len11 = len1 >> 1;
+            MySTL::advance(first_cnt, len11);
+            second_cnt = MySTL::lower_bound(middle, last, *first_cnt, comp);
+            len22 = MySTL::distance(middle, second_cnt);
+        } else {
+            len22 = len2 >> 1;
+            MySTL::advance(second_cnt, len22);
+            first_cnt = MySTL::upper_bound(first, middle, *second_cnt, comp);
+            len11 = MySTL::distance(first, first_cnt);
+        }
+        auto new_middle = MySTL::rotate_adaptive(first_cnt, middle, second_cnt, len1 - len11, len2 - len22, buffer, buffer_size);
+        MySTL::merge_adaptive(first, first_cnt, new_middle, len11, len22, buffer, buffer_size, comp);
+        MySTL::merge_adaptive(new_middle, second_cnt, last, len1 - len11, len2 - len22, buffer, buffer_size, comp);
+    }
+}
+
+// inplace_merge_aux 重载版本，使用函数对象 comp 代替比较操作
+template <class BidrectionalIter, class T, class Compare>
+void inplace_merge_aux(BidrectionalIter first, BidrectionalIter middle, BidrectionalIter last, T*, Compare comp) {
+    auto len1 = MySTL::distance(first, middle);
+    auto len2 = MySTL::distance(middle, last);
+    temporary_buffer<BidrectionalIter, T> buf(first, last);
+    if (!buf.begin()) {
+        MySTL::merge_without_buffer(first, middle, last, len1, len2, comp);
+    } else {
+        MySTL::merge_adaptive(first, middle, last, len1, len2, buf.begin(), buf.size(), comp);
+    }
+}
+
+/**
+ * @brief inplace_merge的重载版本，使用函数对象 comp 代替比较操作
+ */
+template <class BidrectionalIter, class Compare>
+void inplace_merge(BidrectionalIter first, BidrectionalIter middle, BidrectionalIter last, Compare comp) {
+    if (first == middle || middle == last)
+        return;
+    MySTL::inplace_merge_aux(first, middle, last, value_type(first), comp);
+}
+
+// partial_sort
+/**
+ * @brief 对整个序列做部分排序， 保证较小的 N 个元素以递增顺序置于[first, first + N)中]
+ */
+template <class RandomIter>
+void partial_sort(RandomIter first, RandomIter middle, RandomIter last) {
+    MySTL::make_heap(first, middle);
+    for (auto i = middle; i < last; i++) {
+        if (*i < *first) {
+            MySTL::pop_heap_aux(first, middle, i, *i, distance_type(first));
+        }
+    }
+    MySTL::sort_heap(first, middle);
+}
+
+/**
+ * @brief partial_sort的重载版本，使用函数对象 comp 代替比较操作
+ */
+template <class RandomIter, class Compare>
+void partial_sort(RandomIter first, RandomIter middle, RandomIter last, Compare comp) {
+    MySTL::make_heap(first, middle, comp);
+    for (auto i = middle; i < last; i++) {
+        if (*i < *first) {
+            MySTL::pop_heap_aux(first, middle, i, *i, distance_type(first), comp);
+        }
+    }
+    MySTL::sort_heap(first, middle, comp);
+}
+
+/*****************************************************************************************/
+// partial_sort_copy and its auxiliary functions
+// 行为与 partial_sort 类似，不同的是把排序结果复制到 result 容器中
+/*****************************************************************************************/
+template <class InputIter, class RandomIter, class Distance>
+RandomIter
+psort_copy_aux(InputIter first, InputIter last,
+               RandomIter result_first, RandomIter result_last,
+               Distance*) {
+    if (result_first == result_last)
+        return result_last;
+    auto result_iter = result_first;
+    while (first != last && result_iter != result_last) {
+        *result_iter++ = *first++;
+        ++result_iter;
+        ++first;
+    }
+    MySTL::make_heap(result_first, result_iter);
+    while (first != last) {
+        if (*first < *result_first) {
+            MySTL::adjust_heap(result_first, static_cast<Distance>(0), result_iter - result_first, *first);
+        }
+        ++first;
+    }
+    MySTL::sort_heap(result_first, result_iter);
+    return result_iter;
+}
+
+/**
+ * @brief 对序列 [first, last) 进行部分排序，结果保存在 [result_first, result_last) 中
+ */
+template <class InputIter, class RandomIter>
+RandomIter
+psort_copy_copy(InputIter first, InputIter last, RandomIter result_first, RandomIter result_last) {
+    return MySTL::psort_copy_aux(first, last, result_first, result_last, distance_type(result_first));
+}
+
+// psort_copy_aux 重载版本，使用函数对象 comp 代替比较操作
+template <class InputIter, class RandomIter, class Distance, class Compare>
+RandomIter
+psort_copy_aux(InputIter first, InputIter last,
+               RandomIter result_first, RandomIter result_last,
+               Distance*, Compare comp) {
+    if (result_first == result_last)
+        return result_last;
+    auto result_iter = result_first;
+    while (first != last && result_iter != result_last) {
+        *result_iter++ = *first++;
+        ++result_iter;
+        ++first;
+    }
+    MySTL::make_heap(result_first, result_iter, comp);
+    while (first != last) {
+        if (comp(*first < *result_first)) {
+            MySTL::adjust_heap(result_first, static_cast<Distance>(0), result_iter - result_first, *first, comp);
+        }
+        ++first;
+    }
+    MySTL::sort_heap(result_first, result_iter, comp);
+    return result_iter;
+}
+
+/**
+ * @brief 对序列 [first, last) 进行部分排序，结果保存在 [result_first, result_last) 中
+ * @param comp 用来比较元素的函数对象
+ */
+template <class InputIter, class RandomIter, class Compare>
+RandomIter
+psort_copy_copy(InputIter first, InputIter last,
+                RandomIter result_first, RandomIter result_last, Compare comp) {
+    return MySTL::psort_copy_aux(first, last, result_first, result_last, distance_type(result_first), comp);
+}
+
+/**
+ * @brief 对区间内元素重排， 使得谓词 pred 为 true 的元素在前，为 false 的元素在后
+ */
+template <class BdirectionalIter, class UnaryPredicate>
+BdirectionalIter
+partition(BdirectionalIter first, BdirectionalIter last, UnaryPredicate unary_pred) {
+    while (true) {
+        while (first != last && unary_pred(*first)) {
+            ++first;
+        }
+        if (first == last)
+            break;
+        --last;
+
+        while (first != last && !unary_pred(*last)) {
+            --last;
+        }
+        if (first == last)
+            break;
+
+        MySTL::iter_swap(first, last);
+        ++first;
+    }
+    return first;
+}
+
+/**
+ * @brief partition_copy, 行为与partition类似， 谓词 pred 为 true 的元素复制到 result_true 中，为 false 的元素复制到 result_false 中
+ */
+template <class InputIter, class OutputIter1, class OutputIter2, class UnaryPredicate>
+MySTL::pair<OutputIter1, OutputIter2>
+partition_copy(InputIter first, InputIter last,
+               OutputIter1 result_true, OutputIter2 result_false,
+               UnaryPredicate unary_pred) {
+    for (; first != last; ++first) {
+        if (unary_pred(*first)) {
+            *result_true++ = *first;
+        } else {
+            *result_false++ = *first;
+        }
+        return MySTL::pair<OutputIter1, OutputIter2>(result_true, result_false);
+    }
+}
+
+/*****************************************************************************************/
+// sort and its auxiliary function
+// 将 [first, last) 内的元素重新排序
+/*****************************************************************************************/
+
+constexpr static size_t kSmallSectionSize = 128;
+
+template <class Size>
+Size slg2(Size n) {
+    Size k = 0;
+    for (; n > 1; n >>= 1)  // 找出 lgk <= n的k的最大值
+        ++k;
+    return k;
+}
+
+// 分割函数，用来分割序列，返回分割点, 用于quick_sort
+template <class RandomIter, class T>
+RandomIter
+unchecked_partition(RandomIter first, RandomIter last, const T& pivot) {
+    while (true) {
+        while (*first < pivot)
+            ++first;
+        --last;
+        while (pivot < *last)
+            --last;
+        if (!(first < last))
+            return first;
+        MySTL::iter_swap(first, last);
+        ++first;
+    }
+}
+
+// 内省式排序，先进行 quick sort，当分割行为有恶化倾向时，改用 heap sort
+template <class RandomIter, class Size>
+void intro_sort(RandomIter first, RandomIter last, Size depth_limit) {
+    while (static_cast<size_t>(last - first) > kSmallSectionSize) {
+        if (depth_limit == 0) {  // 达到最大分割深度限制, 改用 heap_sort
+            MySTL::partial_sort(first, last, last);
+            return;
+        }
+        --depth_limit;
+        auto mid = MySTL::median(*(first), *(first + (last - first) / 2), *(last - 1));
+        auto cut = MySTL::unchecked_partition(first, last, mid);
+        MySTL::intro_sort(cut, last, depth_limit);
+        last = cut;
+    }
+}
+
+// 插入排序的辅助函数
+template <class RandomIter, class T>
+void unchecked_linear_insert(RandomIter last, const T& value) {
+    auto next = last;
+    --next;
+    while (value < *next) {
+        *last = *next;
+        last = next;
+        --next;
+    }
+    *last = value;
+}
+
+// 插入排序
+template <class RandomIter>
+void insertion_sort(RandomIter first, RandomIter last) {
+    if (first == last)
+        return;
+    for (auto i = first + 1; i != last; ++i) {
+        auto value = *i;
+        if (value < *first) {
+            MySTL::copy_backward(first, i, i + 1);
+            *first = value;
+        } else {
+            MySTL::unchecked_linear_insert(i, value);
+        }
+    }
+}
+
+// 插入排序辅助函数
+template <class RandomIter>
+void unchecked_insertion_sort(RandomIter first, RandomIter last) {
+    for (auto i = first; i != last; i++) {
+        MySTL::unchecked_linear_insert(i, *i);
+    }
+}
+
+template <class RandomIter>
+void final_insertion_sort(RandomIter first, RandomIter last) {
+    if (static_cast<size_t>(last - first) > kSmallSectionSize) {
+        // 判断元素个数是否大于16
+        // 则把区间分割成两段，一端长度为16，另一端为剩余的长度
+        MySTL::insertion_sort(first, first + kSmallSectionSize);
+        MySTL::unchecked_insertion_sort(first + kSmallSectionSize, last);
+    } else {
+        MySTL::insertion_sort(first, last);
+    }
+}
+
+/**
+ * @brief 对区间内元素进行排序
+ */
+template <class RandomIter>
+void sort(RandomIter first, RandomIter last) {
+    if (first != last) {
+        // 采用内省式排序， 将区间分为一个个区间， 然后对整体进行插入排序
+        MySTL::intro_sort(first, last, MySTL::slg2(last - first) * 2);
+        MySTL::final_insertion_sort(first, last);
+    }
+}
+
+// 分割函数unchecked_partition 的重载版本
+template <class RandomIter, class T, class Compare>
+RandomIter
+unchecked_partition(RandomIter first, RandomIter last,
+                    const T& pivot, Compare comp) {
+    while (true) {
+        while (comp(*first, pivot))
+            ++first;
+        --last;
+        while (comp(pivot, *last))
+            --last;
+        if (!(first < last))
+            return first;
+        MySTL::iter_swap(first, last);
+        ++first;
+    }
+}
+
+// 内省式排序 intro_sort 的重载版本
+template <class RandomIter, class Size, class Compare>
+void intro_sort(RandomIter first, RandomIter last,
+                Size depth_limit, Compare comp) {
+    while (static_cast<size_t>(last - first) > kSmallSectionSize) {
+        if (depth_limit == 0) {  // 达到最大分割深度限制, 改用 heap_sort
+            MySTL::partial_sort(first, last, last, comp);
+            return;
+        }
+        --depth_limit;
+        auto mid = MySTL::median(*(first), *(first + (last - first) / 2), *(last - 1));
+        auto cut = MySTL::unchecked_partition(first, last, mid, comp);
+        MySTL::intro_sort(cut, last, depth_limit, comp);
+        last = cut;
+    }
+}
+
+// 插入排序的辅助函数 unchecked_linear_insert 的重载版本
+template <class RandomIter, class T, class Compare>
+void unchecked_linear_insert(RandomIter last, const T& value, Compare comp) {
+    auto next = last;
+    --next;
+    while (comp(value, *next)) {
+        *last = *next;
+        last = next;
+        --next;
+    }
+    *last = value;
+}
+
+// 插入排序 insertion_sort 的重载版本
+template <class RandomIter, class Compare>
+void insertion_sort(RandomIter first, RandomIter last, Compare comp) {
+    if (first == last)
+        return;
+    for (auto i = first + 1; i != last; ++i) {
+        auto value = *i;
+        if (comp(value, *first)) {
+            MySTL::copy_backward(first, i, i + 1);
+            *first = value;
+        } else {
+            MySTL::unchecked_linear_insert(i, value, comp);
+        }
+    }
+}
+
+// 插入排序辅助函数 unchecked_insertion_sort 的重载版本
+template <class RandomIter, class Compare>
+void unchecked_insertion_sort(RandomIter first, RandomIter last, Compare comp) {
+    for (auto i = first; i != last; i++) {
+        MySTL::unchecked_linear_insert(i, *i, comp);
+    }
+}
+
+// final_insertion_sort 的重载版本
+template <class RandomIter, class Compare>
+void final_insertion_sort(RandomIter first, RandomIter last, Compare comp) {
+    if (static_cast<size_t>(last - first) > kSmallSectionSize) {
+        MySTL::insertion_sort(first, first + kSmallSectionSize, comp);
+        MySTL::unchecked_insertion_sort(first + kSmallSectionSize, last, comp);
+    } else {
+        MySTL::insertion_sort(first, last, comp);
+    }
+}
+
+/**
+ * @brief 对区间内元素进行排序, 使用 comp 比较元素
+ */
+template <class RandomIter, class Compare>
+void sort(RandomIter first, RandomIter last, Compare comp) {
+    if (first != last) {
+        MySTL::intro_sort(first, last, MySTL::slg2(last - first) * 2, comp);
+        MySTL::final_insertion_sort(first, last, comp);
+    }
+}
+
+// nth_element
+/**
+ * @brief 对序列重排，使得所有小于第 n 个元素的元素出现在它的前面，大于它的出现在它的后面
+ */
+template <class RandomIter>
+void nth_element(RandomIter first, RandomIter nth, RandomIter last) {
+    if (nth == last)
+        return;
+    while (last - first > 3) {
+        auto cut = MySTL::unchecked_partition(first, last, MySTL::median(*first, *(first + (last - first) / 2), *(last - 1)));
+        if (cut <= nth)   // nth 位于后半段
+            first = cut;  // 对后半段进行递归
+        else
+            last = cut;   // nth 位于前半段, 对左半段分割
+    }
+    MySTL::insertion_sort(first, last);
+}
+
+/**
+ * @brief nth_element 的重载版本, 使用 comp 比较元素
+ */
+template <class RandomIter, class Compare>
+void nth_element(RandomIter first, RandomIter nth, RandomIter last, Compare comp) {
+    if (nth == last)
+        return;
+    while (last - first > 3) {
+        auto cut = MySTL::unchecked_partition(first, last,
+                                              MySTL::median(*first, *(first + (last - first) / 2),
+                                                            *(last - 1)),
+                                              comp);
+        if (cut <= nth)   // nth 位于后半段
+            first = cut;  // 对后半段进行递归
+        else
+            last = cut;   // nth 位于前半段, 对左半段分割
+    }
+    MySTL::insertion_sort(first, last, comp);
+}
+
+/*****************************************************************************************/
+// 从[first, last)中将元素复制到 result 上，序列必须有序，如果有重复的元素，只会复制一次
+/*****************************************************************************************/
+
+// unique_copy 的 forward_iterator_tag 版本, 前向迭代器使用while循环, 将不同元素复制到 result 上
+template <class InputIter, class ForwardIter>
+ForwardIter
+unique_copy_dispatch(InputIter first, InputIter last, ForwardIter result, forward_iterator_tag) {
+    *result = *first;
+    while (result != last)
+    {
+        if (*result != *first)
+            *++result = *first;
+        ++first;
+    }
+    return ++result;
+}
+
+// unique_copy 的 output_iterator_tag 版本
+// 由于 output_iterator 只能进行只写操作，所以不能有 *result != *first 这样的判断
+// see output_iterator_tag(https://cplusplus.com/reference/iterator/OutputIterator/)
+template <class InputIter, class OutputIter>
+OutputIter
+unique_copy_dispatch(InputIter first, InputIter last, OutputIter result, output_iterator_tag) {
+    auto value = *first;
+    *result = *first;
+    while (++first != last) {
+        if (value != *first) {
+            value = *first;
+            *++result = *first;
+        }
+        ++first;
+    }
+    return ++result;
+}
+
+/**
+ * @brief 从[first, last)中将元素复制到 result 上，序列必须有序，如果有重复的元素，只会复制一次
+ * 输入必须是有序
+ */
+template <class InputIter, class OutputIter>
+OutputIter
+unique_copy(InputIter first, InputIter last, OutputIter result) {
+    if (first == last)
+        return result;
+    return MySTL::unique_copy_dispatch(first, last, result, iterator_category(result));
+}
+
+// unique_copy_dispatch 针对 forward_iterator_tag 使用Compare的重载版本
+template <class InputIter, class ForwardIter, class Compare>
+ForwardIter
+unique_copy_dispatch(InputIter first, InputIter last, ForwardIter result, Compare comp, forward_iterator_tag) {
+    *result = *first;
+    while (result != last) {
+        if (!comp(*result, *first))
+            *++result = *first;
+        ++first;
+    }
+    return ++result;
+}
+
+// unique_copy_dispatch 针对 output_iterator_tag 使用Compare的重载版本
+template <class InputIter, class OutputIter, class Compare>
+OutputIter
+unique_copy_dispatch(InputIter first, InputIter last, OutputIter result, Compare comp, output_iterator_tag) {
+    auto value = *first;
+    *result = *first;
+    while (++first != last) {
+        if (!comd(value, *first)) {
+            value = *first;
+            *++result = *first;
+        }
+    }
+    return ++result;
+}
+
+/**
+ * @brief unique_copy 的重载版本, 使用 comp 比较元素
+ */
+template <class InputIter, class OutputIter, class Compare>
+OutputIter
+unique_copy(InputIter first, InputIter last, OutputIter result, Compare comp) {
+    if (first == last)
+        return result;
+    return MySTL::unique_copy_dispatch(first, last, result, iterator_category(result), comp);
+}
+
+/*****************************************************************************************/
+// unique()
+// 从[first, last)中移除重复的元素，序列必须有序, 返回不重复序列的尾部
+/*****************************************************************************************/
+
+/**
+ * @brief 从[first, last)中移除重复的元素，序列必须有序, 返回不重复序列的尾部
+ */
+template <class ForwardIter>
+ForwardIter unique(ForwardIter first, ForwardIter last) {
+    first = MySTL::adjacent_find(first, last);
+    return MySTL::unique_copy(first, last, first);
+}
+
+/**
+ * @brief unique 的重载版本, 使用 comp 比较元素
+ */
+template <class ForwardIter, class Compare>
+ForwardIter unique(ForwardIter first, ForwardIter last, Compare comp) {
+    first = MySTL::adjacent_find(first, last, comp);
+    return MySTL::unique_copy(first, last, first, comp);
+}
 
 }  // namespace MySTL
 

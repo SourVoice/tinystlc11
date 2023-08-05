@@ -6,6 +6,8 @@
 #include "iterator.h"
 #include "util.h"
 #include "numeric.h"
+#include "heap_algo.h"
+#include "set_algo.h" 
 
 namespace MySTL {
 

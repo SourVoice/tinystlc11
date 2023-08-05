@@ -1,9 +1,11 @@
 #ifndef MY_ALLOCATOR_H
 #define MY_ALLOCATOR_H
+
+#include <memory>
+
 #include "construct.h"
 #include "type_traits.h"
 #include "util.h"
-#include <memory>
 
 namespace MySTL {
 
