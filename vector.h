@@ -118,7 +118,7 @@ public:
     size_type capacity() const noexcept { return static_cast<size_type>(cap_ - begin_); }
 
     // 从新适配容器
-    void      reserve(size_type n);     // TODO: reserve, shrink_to_fit实现
+    void      reserve(size_type n);
     void      shrink_to_fit();
     
     // 元素访问
@@ -176,7 +176,6 @@ public:
     }
 
     // emplace & emplace_back
-    // TODO: 实现emplace
     template <class ...Args>
     iterator emplace(const_iterator pos, Args&&...args);
 
@@ -192,7 +191,6 @@ public:
     void pop_back();
 
     // insert
-    /// TODO: 实现insert
     iterator insert(const_iterator pos, const value_type& value);
     iterator insert(const_iterator pos, value_type&& value) {
         return emplace(pos, MySTL::move(value));
@@ -210,14 +208,12 @@ public:
     }
 
     // erase & clear
-    // TODO: 实现erase
     iterator erase(const_iterator pos);
     iterator erase(const_iterator first, const_iterator last);
 
     void clear() { erase(begin(), end()); }
 
     // resize & reverse
-    // TODO: 实现resize 
     void resize(size_type new_size) { return resize(new_size, value_type()); }
     void resize(size_type new_size, const value_type& value);
 
