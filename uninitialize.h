@@ -135,13 +135,13 @@ void uninitialized_fill_n(ForwardIter first, Size n, const T& value) {
  * @brief unitialized_move()
  */
 template <class InputIter, class ForwardIter>
-ForwardIter unchecked_uninitiazlied_move(InputIter first, InputIter last,
+ForwardIter unchecked_uninitialized_move(InputIter first, InputIter last,
                                          ForwardIter result, std::true_type) {
     return MySTL::move(first, last, result);
 }
 
 template <class InputIter, class ForwardIter>
-ForwardIter unchecked_uninitiazlied_move(InputIter first, InputIter last,
+ForwardIter unchecked_uninitialized_move(InputIter first, InputIter last,
                                          ForwardIter result, std::false_type) {
     auto cur = result;
     try {
@@ -161,7 +161,7 @@ ForwardIter unchecked_uninitiazlied_move(InputIter first, InputIter last,
 template <class InputIter, class ForwardIter>
 ForwardIter uninitialized_move(InputIter first, InputIter last,
                                ForwardIter result) {
-    return uncheched_uninitialized_move(first, last, result, std::is_trivially_move_assignable<typename iterator_traits<ForwardIter>::value_type>{});
+    return unchecked_uninitialized_move(first, last, result, std::is_trivially_move_assignable<typename iterator_traits<ForwardIter>::value_type>{});
 }
 
 /**
