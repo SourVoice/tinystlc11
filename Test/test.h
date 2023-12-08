@@ -569,7 +569,7 @@ protected:
         std::cout << " " << str_name << " : " << str << std::endl; \
     } while (0)
 
-// 输出容器调用函数后的结果
+// 输出容器调用函数后的容器
 #define CON_FUN_AFTER(con, fun)                    \
     do {                                           \
         std::string fun_name = #fun;               \
@@ -579,34 +579,14 @@ protected:
         CON_COUT(con);                             \
     } while (0)
 
-// 输出字符串调用函数后的结果
-#define STR_FUN_AFTER(str, fun)                    \
-    do {                                           \
-        std::string fun_name = #fun;               \
-        std::cout << " After " << fun_name << " :" \
-                  << std::endl;                    \
-        fun;                                       \
-        STR_COUT(str);                             \
-    } while (0)
-
-// 输出容器调用函数后的容器
-#define CON_FUN_AFTER(con, fun)                    \
-    do {                                           \
-        std::string fun_name = #fun;               \
-        std::cout << " After " << fun_name << " :" \
-                  << std::endl;                    \
-        fun;                                       \
-        COUT(con);                                 \
-    } while (0)
-
 // 输出字符串调用函数后的字符串
 #define STR_FUN_AFTER(str, fun)                     \
     do {                                            \
         std::string fun_name = #fun;                \
         std::cout << " After " << fun_name << " : " \
-                  << fun << std::endl;              \
+                  << std::endl;                     \
         fun;                                        \
-        COUT(con);                                  \
+        STR_COUT(con);                              \
     } while (0)
 
 // 输出容器调用函数的值

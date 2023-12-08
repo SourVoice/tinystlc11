@@ -1,6 +1,6 @@
 
 #include "test.h"
-#include "algorithm_test.h"
+#include "include/algorithm_test.h"
 
 int main() {
     using namespace MySTL::test;

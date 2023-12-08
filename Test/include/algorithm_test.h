@@ -8,9 +8,9 @@
 #include <functional>
 
 // 目标
-#include "../src/algorithm.h"
+#include "../../src/algorithm.h"
 
-#include "test.h"
+#include "../test.h"
 
 namespace MySTL {
 
