@@ -742,6 +742,8 @@ public:
     const_iterator find(const key_type& key) const;
 
     size_type      count_multi(const key_type& key) const {
+        auto p = equal_range_multi(key);
+        return static<size_type>(MySTL::distance(p.first, p.second));
     }
 
     size_type      count_unique(const key_type& key) const { return find(key) != end() ? 1 : 0; }
@@ -929,7 +931,7 @@ rb_tree<T, Compare>::insert_multi(const value_type& value) {
 
 /**
  * @brief 插入节点，不允许插入具有相同键的节点
- * @param 
+ * @return pair<iterator, bool> 插入的位置，是否插入成功 
 */
 template <class T, class Compare>
 MySTL::pair<typename rb_tree<T, Compare>::iterator, bool>
@@ -938,10 +940,10 @@ rb_tree<T, Compare>::insert_unique(const value_type& value) {
     auto pos = get_insert_unique_pos(value_traits::get_key(value));
     if (pos.second) {
         auto it = insert_value_at(pos.first.first, value, pos.first.second);
-        return MySTL::make_pair(it, true);
+        return MySTL::make_pair(it, pos.second);
     }
 
-    return MySTL::make_pair(res.first.fisrt, false);
+    return MySTL::make_pair(res.first.fisrt, pos.second);
 }
 
 /**
@@ -979,7 +981,7 @@ rb_tree<T, Compare>::erase_multi(const key_type & key) {
  */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::size_type
-rb_tree<T, Compare>::erase_unique(typename rb_tree<T, Compare>::iterator hint) {
+rb_tree<T, Compare>::erase_unique(const key_type& key) {
     auto      p = equal_range_unique(value_traits::get_key(*hint));
     size_type n = MySTL::distance(p.first, p.second);
     erase(p.first, p.second);
@@ -1046,7 +1048,7 @@ rb_tree<T, Compare>::find(const key_type& key) {
 */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::const_iterator
-rb_tree<T, Compare>::find(const key_type& key) {
+rb_tree<T, Compare>::find(const key_type& key) const {
     auto y = header_;
     auto x = root(); 
     while(x != nullptr) {
@@ -1087,7 +1089,7 @@ rb_tree<T, Compare>::lower_bound(const key_type& key) {
 */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::const_iterator
-rb_tree<T, Compare>::lower_bound(const key_type& key) {
+rb_tree<T, Compare>::lower_bound(const key_type& key) const {
     auto y = header_;
     auto x = root();
     while (x != nullptr) {
@@ -1128,7 +1130,7 @@ rb_tree<T, Compare>::upper_bound(const key_type& key) {
 */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::const_iterator
-rb_tree<T, Compare>::upper_bound(const key_type& key) {
+rb_tree<T, Compare>::upper_bound(const key_type& key) const {
     auto y = header_;
     auto x = root();
     while (x != nullptr) {
@@ -1232,9 +1234,9 @@ rb_tree<T, Compare>::get_insert_multi_pos(const key_type& key) {
 }
 
 /**
- * @brief 插入节点，不允许插入具有相同节点
+ * @brief 寻找合适插入节点的位置，不允许插入具有相同键的节点
  * @param key 要插入节点的键值
- * @return 返回一个 pair，第一个元素 pair<插入的父节点，一个bool表示是否在左边插入>，第二个元素为是否插入成功
+ * @return 返回一个 pair，第一个元素 pair<插入点的父节点，一个bool表示是否在左边插入>，第二个元素为是否插入成功
 */
 template <class T, class Compare>
 MySTL::pair<MySTL::pair<typename rb_tree<T, Compare>::base_ptr, bool>, bool>
@@ -1266,6 +1268,7 @@ rb_tree<T, Compare>::get_insert_unique_pos(const key_type& key) {
  * @param x 插入点的父节点
  * @param value 要插入的值
  * @param add_to_left 是否在左边插入
+ * @return iterator 插入的位置
 */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
