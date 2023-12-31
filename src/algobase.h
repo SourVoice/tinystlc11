@@ -1,13 +1,22 @@
 #ifndef MY_ALGOBASE_H
 #define MY_ALGOBASE_H
-/**
- * impl simple algo for STL
- * uitlty version, like "max", "copy", "fill_n" and etc
- */
+
+// 
+// impl simple algo for STL
+// uitlty function: 
+// "max", "min", "iter_swap"
+// "copy", "copy_backward", "copy_if", "copy_n"
+// "move", "move_backward"
+// "equal"
+// "fill_n", "fill"
+// "lexicographical_compare" * , "mismatch" *
+// 
+
 #include <cstring>
 
 #include "iterator.h"
 #include "util.h"
+
 namespace MySTL {
 
 // return first when equal
@@ -112,13 +121,16 @@ BidirectionalIter2 unchecked_copy_backward(BidirectionalIter1 first, Bidirection
 // copy_backward() 针对 trivially_copy_assignable 类型提供特化版本
 template <class Tp, class Up>
 typename std::enable_if<
-    std::is_same<typename std::remove_const<Tp>::value, Up>::value &&
+    std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
         std::is_trivially_copy_assignable<Up>::value,
     Up*>::type
 unchecked_copy_backward(Tp* first, Tp* last,
                         Up* result) {
     const auto n = static_cast<size_t>(last - first);
-    std::memmove(result, first, n * sizeof(Up));
+    if (n != 0) {
+        result -= n;
+        std::memmove(result, first, n * sizeof(Up));
+    }
     return result;
 }
 
@@ -281,11 +293,11 @@ unchecked_move_backward(Tp* first, Tp* last, Up* result) {
 template <class BidirectionalIter1, class BidirectionalIter2>
 BidirectionalIter2 move_backward(BidirectionalIter1 first, BidirectionalIter1 last,
                                  BidirectionalIter2 result) {
-    return unchecked_move_baackward(first, last, result);
+    return unchecked_move_backward(first, last, result);
 }
 
 /**
- * equel()
+ * equal()
  * @brief 比较[first, last) 和第二个序列对应的区间是否相等
  */
 template <class InputIter1, class InputIter2>
@@ -352,7 +364,7 @@ void fill_cat(ForwardIter first, ForwardIter last, const T& value, MySTL::forwar
 // fill() for random_access_iterator_tag
 template <class RandIter, class T>
 void fill_cat(RandIter first, RandIter last, const T& value, MySTL::random_access_iterator_tag) {
-    fill_n(first, last, value, iterator_category(first));
+    fill_n(first, last - first, value);
 }
 
 /**
