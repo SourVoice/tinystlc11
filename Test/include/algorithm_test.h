@@ -1,6 +1,8 @@
 #ifndef MY_ALGORITHM_TEST_H
 #define MY_ALGORITHM_TEST_H
 
+// 算法测试: 包含了 algorithm.h头文件中 的 81 个算法测试
+
 // 标准
 #include <algorithm>
 #include <iostream>
@@ -1099,10 +1101,10 @@ TEST(unique) {
     EXPECT_CON_EQ(arr3, arr4);
 }
 
-} // namespace algorithm_test
+} // namespace MySTL::test::algorithm_test
 
 }  // namespace MySTL::test
 
-}  // namespace MySTL::test::algorithm_test
+}  // namespace MySTL
 
-#endif
+#endif /* MY_ALGORITHM_TEST_H */
