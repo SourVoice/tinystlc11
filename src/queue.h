@@ -27,25 +27,28 @@ private:
 public:
     /*********************************** 构造，复制，移动，析构 ***********************************/
 
+    // 构造
     queue() = default;
 
-    explicit queue(size_type n) :
-        c_(n) {}
+    explicit queue(size_type n) : c_(n) {}
 
-    queue(size_type n, const value_type& value) :
-        c_(n, value) {}
+    queue(size_type n, const value_type& value) : c_(n, value) {}
 
     template <class Iter>
-    queue(Iter first, Iter last) :
-        c_(first, last) {}
+    queue(Iter first, Iter last) : c_(first, last) {}
 
-    queue(std::initializer_list<T> ilist) :
-        c_(ilist.begin(), ilist.end()) {}
+    queue(std::initializer_list<T> ilist) : c_(ilist.begin(), ilist.end()) {}
 
-    queue(const Container& c) :
-        c_(c) {}
+    queue(const Container& c) : c_(c) {}
 
     queue(Container&& c) noexcept(std::is_nothrow_move_constructible<Container>::value) :
+        c_(MySTL::move(c)) {}
+
+    // 复制
+    queue(const queue& rhs) : c_(rhs.c_) {}
+
+    // 拷贝
+    queue(queue&& rhs) noexcept(std::is_nothrow_move_constructible<Container>::value) :
         c_(MySTL::move(rhs.c_)) {}
 
     queue& operator=(const queue& rhs) {
@@ -82,7 +85,7 @@ public:
     void emplace(Args&&... args) { c_.emplace_back(MySTL::forward<Args>(args)...); }
 
     void push(const value_type& value) { c_.push_back(value); }
-    void push(value_type&& value) { c_.emplace_back(MySTL::move(value);) }
+    void push(value_type&& value) { c_.emplace_back(MySTL::move(value)); }
 
     void pop() { c_.pop_front(); }
 
@@ -123,12 +126,12 @@ bool operator>(const queue<T, Container>& lhs, const queue<T, Container>& rhs) {
 
 template <class T, class Container>
 bool operator>=(const queue<T, Container>& lhs, const queue<T, Container>& rhs) {
-    return !(rhs < lhs);
+    return !(lhs < rhs);
 }
 
 template <class T, class Container>
-bool operator>=(const queue<T, Container>& lhs, const queue<T, Container>& rhs) {
-    return !(lhs < rhs);
+bool operator<=(const queue<T, Container>& lhs, const queue<T, Container>& rhs) {
+    return !(rhs < lhs);
 }
 
 template <class T, class Container>
@@ -162,32 +165,26 @@ public:
     // 构造
     priority_queue() = default;
 
-    priority_queue(const Compare& comp) :
-        c_(), comp_(comp) {}
+    priority_queue(const Compare& comp) : c_(), comp_(comp) {}
 
-    explicit priority_queue(size_type n) :
-        C_(n) {
+    explicit priority_queue(size_type n) : c_(n) {
         MySTL::make_heap(c_.begin(), c_.end(), comp_);
     }
 
     template <class Iter>
-    priority_queue(Iter first, Iter last) :
-        c_(first, last) {
+    priority_queue(Iter first, Iter last) : c_(first, last) {
         MySTL::make_heap(c_.begin(), c_.end(), comp_);
     }
 
-    priority_queue(std::initializer_list<T> ilist) :
-        c_(ilist) {
+    priority_queue(std::initializer_list<T> ilist) : c_(ilist) {
         MySTL::make_heap(c_.begin(), c_.end(), comp_);
     }
 
-    priority_queue(const Container& s) :
-        c_(s) {
+    priority_queue(const Container& s) : c_(s) {
         MySTL::make_heap(c_.begin(), c_.end(), comp_);
     }
 
-    priority_queue(Container&& s) :
-        c_(MySTL::move(s)) {
+    priority_queue(Container&& s) : c_(MySTL::move(s)) {
         MySTL::make_heap(c_.begin(), c_.end(), comp_);
     }
 
@@ -205,14 +202,14 @@ public:
     priority_queue& operator=(const priority_queue& rhs) {
         c_ = rhs.c_;
         comp_ = rhs.comp_;
-        MySTLL::make_heap(c_.begin(), c_.end(), comp_);
+        MySTL::make_heap(c_.begin(), c_.end(), comp_);
         return *this;
     }
 
     priority_queue& operator=(std::initializer_list<T> ilist) {
         c_ = ilist;
         comp_ = vlaue_compare();
-        MySTLL::make_heap(c_.begin(), c_.end(), comp_);
+        MySTL::make_heap(c_.begin(), c_.end(), comp_);
         return *this;
     }
 
@@ -220,7 +217,7 @@ public:
     priority_queue& operator=(const priority_queue&& rhs) {
         c_ = MySTL::move(rhs.c_);
         comp_ = rhs.comp_;
-        MySTLL::make_heap(c_.begin(), c_.end(), comp_);
+        MySTL::make_heap(c_.begin(), c_.end(), comp_);
         return *this;
     }
 
@@ -255,7 +252,7 @@ public:
     }
 
     void pop() {
-        MySTL::pop_heap(c_.being(), c_.end(), comp_);
+        MySTL::pop_heap(c_.begin(), c_.end(), comp_);
         c_.pop_back();
     }
 
@@ -290,7 +287,7 @@ bool operator!=(priority_queue<T, Container, Compare>& lhs,
 }
 
 template <class T, class Container, class Compare>
-bool swap(priority_queue<T, Container, Compare>& lhs,
+void swap(priority_queue<T, Container, Compare>& lhs,
           priority_queue<T, Container, Compare>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }

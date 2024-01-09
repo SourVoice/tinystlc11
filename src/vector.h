@@ -348,6 +348,7 @@ template <class... Args>
 void vector<T>::emplace_back(Args&&... args) {
     if (end_ < cap_) {
         data_allocator::construct(MySTL::address_of(*end_), MySTL::forward<Args>(args)...);
+        ++end_;
     } else {
         reallocate_emplace(end_, MySTL::forward<Args>(args)...);
     }

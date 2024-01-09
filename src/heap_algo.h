@@ -67,11 +67,22 @@ void push_heap(RandIter first, RandIter last, Compare cmp) {
     push_heap_d(first, last, MySTL::distance_type(first), cmp);
 }
 
+/*****************************************************************************************/
+// pop_heap
+// 该函数接受两个迭代器，表示 heap 容器的首尾，将 heap 的根节点取出放到容器尾部，调整 heap
+/*****************************************************************************************/
 // pop_heap() 的辅助函数
 template <class RandIter, class Distance, class T>
 void pop_heap_aux(RandIter first, RandIter last, RandIter result, Distance*, T value) {
     *result = *first;                                                     // 取出堆顶元素
     adjust_heap(first, static_cast<Distance>(0), (last - first), value);  // 对剩余的[first, last)进行重排, 此处last已经在pop_heap()中减一
+}
+
+// pop_heap_aux() 使用Compare的重载版本
+template <class RandIter, class Distance, class T, class Compare>
+void pop_heap_aux(RandIter first, RandIter last, RandIter result, Distance*, T value, Compare cmp) {
+    *result = *first;                                                          // 取出堆顶元素
+    adjust_heap(first, static_cast<Distance>(0), last - first, value, cmp);  // 对剩余的[first, last)进行重排, 此处last已经在pop_heap()中减一
 }
 
 /**
@@ -82,21 +93,16 @@ void pop_heap(RandIter first, RandIter last) {
     pop_heap_aux(first, last - 1, last - 1, MySTL::distance_type(first), *(last - 1));
 }
 
-// pop_heap_aux() 使用Compare的重载版本
-template <class RandIter, class Distance, class T, class Compare>
-void pop_heap_aux(RandIter first, RandIter last, RandIter result, Distance*, T value, Compare cmp) {
-    *result = *first;                                                          // 取出堆顶元素
-    adjust_heap(first, static_cast<Distance>(0), (last - first), value, cmp);  // 对剩余的[first, last)进行重排, 此处last已经在pop_heap()中减一
-}
-
-/**
- * @brief pop_heap() 使用Compare的重载版本
- */
+// pop_heap() 使用Compare的重载版本
 template <class RandIter, class Compare>
 void pop_heap(RandIter first, RandIter last, Compare cmp) {
     pop_heap_aux(first, last - 1, last - 1, MySTL::distance_type(first), *(last - 1), cmp);
 }
 
+/*****************************************************************************************/
+// adjust_heap
+// 该函数接受三个迭代器，表示一个 heap 容器的首尾，以及一个新值，将新值放在容器尾部，然后重排 heap
+/*****************************************************************************************/
 /**
  * @brief adjust_heap(), 该函数接受三个迭代器，表示一个 heap 容器的首尾，以及一个新值，将新值放在容器尾部，然后重排 heap
  * @param first heap 容器的首迭代器
