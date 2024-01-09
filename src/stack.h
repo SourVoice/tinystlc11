@@ -68,7 +68,7 @@ public:
 
     stack& operator=(std::initializer_list<T> ilist) {
         c_ = ilist;
-        return *this
+        return *this;
     }
 
     // 析构
