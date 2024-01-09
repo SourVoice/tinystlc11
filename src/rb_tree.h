@@ -273,7 +273,7 @@ struct rb_tree_const_iterator: public rb_tree_iterator_base<T> {
 /*********************************** 红黑树相关算法 ***********************************/
 /**
  * 旋转，元素调整等
-*/
+ */
 template <class Nodeptr>
 Nodeptr rb_tree_min(Nodeptr x) noexcept {
     while(x -> left != nullptr) 
@@ -308,7 +308,7 @@ Nodeptr rb_tree_next(Nodeptr node) noexcept {
     /*
     * If we have a right-hand child, go down and then left as far
     * as we can.
-    */
+     */
     if (node->right != nullptr)
         return rb_tree_min(node->right);
     /*
@@ -317,7 +317,7 @@ Nodeptr rb_tree_next(Nodeptr node) noexcept {
     * Go up the tree; any time the ancestor is a right-hand child of its
     * parent, keep going up. First time it's a left-hand child of its
     * parent, said parent is our 'next' node.
-    */
+     */
     while (!rb_tree_is_lchild(node))
         node = node->parent;
 }
@@ -376,7 +376,7 @@ void rb_tree_rotate_right(Nodeptr x, Nodeptr& root) noexcept {
 其他情况都为当前父节点为红，
 uncle = 祖父节点的另一个子节点
 case 1：当前节点父节点为红，且uncle为红
-*/
+ */
 template <class Nodeptr>
 void rb_tree_insert_rebalance(Nodeptr x, Nodeptr& root) noexcept {
     rb_tree_set_red(x);
@@ -432,7 +432,7 @@ void rb_tree_insert_rebalance(Nodeptr x, Nodeptr& root) noexcept {
  * @param root 根节点
  * @param leftmost 最小节点
  * @param rightmost 最大节点
-*/
+ */
 // FIGUREOUT: erase与insert reblance的异同
 template <class Nodeptr>
 void rb_tree_erase_reblance(Nodeptr z, Nodeptr& root, Nodeptr& leftmost, Nodeptr& rightmost) {
@@ -816,7 +816,7 @@ private:
  * @brief 就地插入元素，允许插入具有相同键的节点
  * @param args 
  * @return iterator 插入的位置
-*/
+ */
 template <class T, class Compare>
 template <class... Args>
 typename rb_tree<T, Compare>::iterator
@@ -831,7 +831,7 @@ rb_tree<T, Compare>::emplace_multi(Args&&... args) {
  * @brief 就地插入元素，不允许插入具有相同键的节点
  * @param args 变参模板参数
  * @return pair<iterator, bool> 插入的位置，是否插入成功
-*/
+ */
 template <class T, class Compare>
 template <class... Args>
 MySTL::pair<typename rb_tree<T, Compare>::iterator, bool>
@@ -850,7 +850,7 @@ rb_tree<T, Compare>::emplace_unique(Args&&... args) {
 /**
  * @brief hint位置与插入位置重复时，采用更优算法  
  * @param hint 插入位置的提示
-*/
+ */
 template <class T, class Compare>
 template <class... Args>
 typename rb_tree<T, Compare>::iterator
@@ -884,7 +884,7 @@ rb_tree<T, Compare>::emplace_multi_use_hint(typename rb_tree<T, Compare>::iterat
  * @brief hint位置与插入位置重复时，采用更优算法
  * @param hint 插入位置的提示
  * @return iterator 插入的位置
-*/
+ */
 template <class T, class Compare>
 template <class... Args>
 typename rb_tree<T, Compare>::iterator
@@ -932,7 +932,7 @@ rb_tree<T, Compare>::insert_multi(const value_type& value) {
 /**
  * @brief 插入节点，不允许插入具有相同键的节点
  * @return pair<iterator, bool> 插入的位置，是否插入成功 
-*/
+ */
 template <class T, class Compare>
 MySTL::pair<typename rb_tree<T, Compare>::iterator, bool>
 rb_tree<T, Compare>::insert_unique(const value_type& value) {
@@ -949,7 +949,7 @@ rb_tree<T, Compare>::insert_unique(const value_type& value) {
 /**
  * @brief 删除 hint 处节点
  * @return iterator 指向被删除节点的下一个节点
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::erase(iterator hint) {
@@ -965,7 +965,7 @@ rb_tree<T, Compare>::erase(iterator hint) {
 /**
  * @brief 所有键为 key 的元素，返回删除的个数
  * @return 删除的个数
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::size_type
 rb_tree<T, Compare>::erase_multi(const key_type & key) {
@@ -978,7 +978,7 @@ rb_tree<T, Compare>::erase_multi(const key_type & key) {
 /**
  * @brief 删除键为 key 的元素，返回删除的个数
  * @return 删除的个数
- */
+  */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::size_type
 rb_tree<T, Compare>::erase_unique(const key_type& key) {
@@ -990,7 +990,7 @@ rb_tree<T, Compare>::erase_unique(const key_type& key) {
 
 /**
  * @brief 删除 [first, last) 内的元素]
-*/
+ */
 template <class T, class Compare>
 void rb_tree<T, Compare>::
 erase(iterator first, iterator last) {
@@ -1004,7 +1004,7 @@ erase(iterator first, iterator last) {
 
 /**
  * @brief 删除 [first, last) 内的元素]
-*/
+ */
 template <class T, class Compare>
 void rb_tree<T, Compare>::
 clear() {
@@ -1022,7 +1022,7 @@ clear() {
 
 /**
  * @brief 查找键为 key 的元素，返回其迭代器(二叉查找树)
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::find(const key_type& key) {
@@ -1045,7 +1045,7 @@ rb_tree<T, Compare>::find(const key_type& key) {
 
 /**
  * @brief 查找键为 key 的元素，返回其迭代器(二叉查找树)
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::const_iterator
 rb_tree<T, Compare>::find(const key_type& key) const {
@@ -1066,7 +1066,7 @@ rb_tree<T, Compare>::find(const key_type& key) const {
 
 /**
  * @brief 键不小于key的第一个位置，算法同find()方法
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::lower_bound(const key_type& key) {
@@ -1086,7 +1086,7 @@ rb_tree<T, Compare>::lower_bound(const key_type& key) {
 
 /**
  * @brief 键不小于key的第一个位置，算法同find()方法
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::const_iterator
 rb_tree<T, Compare>::lower_bound(const key_type& key) const {
@@ -1106,7 +1106,7 @@ rb_tree<T, Compare>::lower_bound(const key_type& key) const {
 
 /**
  * @brief 键不小于key的最后一个位置
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::upper_bound(const key_type& key) {
@@ -1127,7 +1127,7 @@ rb_tree<T, Compare>::upper_bound(const key_type& key) {
 
 /**
  * @brief 键不小于key的最后一个位置
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::const_iterator
 rb_tree<T, Compare>::upper_bound(const key_type& key) const {
@@ -1206,7 +1206,7 @@ void rb_tree<T, Compare>::rb_tree_init() {
 
 /**
  * @brief 重置rb_tree状态
-*/
+ */
 template <class T, class Compare>
 void rb_tree<T, Compare>::reset() {
     header_ = nullptr;
@@ -1218,7 +1218,7 @@ void rb_tree<T, Compare>::reset() {
  * @brief 寻找合适插入节点的位置，允许插入具有相同键的节点
  * @param key 新节点的键
  * @return pair<指向应该插入位置的父节点，插入在找到的位置的左边还是右边>
-*/
+ */
 template <class T, class Compare>
 MySTL::pair<typename rb_tree<T, Compare>::base_ptr, bool>
 rb_tree<T, Compare>::get_insert_multi_pos(const key_type& key) {
@@ -1237,7 +1237,7 @@ rb_tree<T, Compare>::get_insert_multi_pos(const key_type& key) {
  * @brief 寻找合适插入节点的位置，不允许插入具有相同键的节点
  * @param key 要插入节点的键值
  * @return 返回一个 pair，第一个元素 pair<插入点的父节点，一个bool表示是否在左边插入>，第二个元素为是否插入成功
-*/
+ */
 template <class T, class Compare>
 MySTL::pair<MySTL::pair<typename rb_tree<T, Compare>::base_ptr, bool>, bool>
 rb_tree<T, Compare>::get_insert_unique_pos(const key_type& key) {
@@ -1269,7 +1269,7 @@ rb_tree<T, Compare>::get_insert_unique_pos(const key_type& key) {
  * @param value 要插入的值
  * @param add_to_left 是否在左边插入
  * @return iterator 插入的位置
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::insert_value_at(base_ptr x, const value_type& value, bool add_to_left) {
@@ -1300,7 +1300,7 @@ rb_tree<T, Compare>::insert_value_at(base_ptr x, const value_type& value, bool a
  * @param x 插入点的父节点
  * @param node 要插入的节点
  * @param add_to_left 是否在左边插入
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::insert_node_at(base_ptr x, node_ptr node, bool add_to_left) {
@@ -1329,7 +1329,7 @@ rb_tree<T, Compare>::insert_node_at(base_ptr x, node_ptr node, bool add_to_left)
  * @param hint 插入位置的迭代器
  * @param key 键值
  * @param node 要插入的节点
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::insert_multi_use_hint(iterator hint, key_type key, node_ptr node) {
@@ -1355,7 +1355,7 @@ rb_tree<T, Compare>::insert_multi_use_hint(iterator hint, key_type key, node_ptr
  * @param hint 插入位置的迭代器
  * @param key 键值
  * @param node 要插入的节点
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::iterator
 rb_tree<T, Compare>::insert_unique_use_hint(iterator hint, key_type key, node_ptr node) {
@@ -1384,7 +1384,7 @@ rb_tree<T, Compare>::insert_unique_use_hint(iterator hint, key_type key, node_pt
  * @brief 递归复制整棵树，从节点 x 开始
  * @param x 要复制的节点
  * @param p 复制节点的父节点
-*/
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::base_ptr
 rb_tree<T, Compare>::copy_from(base_ptr x, base_ptr p) {
@@ -1415,7 +1415,7 @@ rb_tree<T, Compare>::copy_from(base_ptr x, base_ptr p) {
 /**
  * @brief 递归删除整棵树，从节点 x 开始
  * @param x 要删除的节点(开始)
-*/
+ */
 template <class T, class Compare>
 void rb_tree<T, Compare>::erase_since(base_ptr x) {
     while(x != nullptr) {
@@ -1463,6 +1463,6 @@ void swap(rb_tree<T, Compare>& lhs, rb_tree<T, Compare>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
-} /* namespace MySTL */
+} /* namespace MySTL  */
 
 #endif // MY_RBTREE_H

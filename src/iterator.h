@@ -1,9 +1,13 @@
 #ifndef MY_ITERATOR_H
 #define MY_ITERATOR_H
-#include <cstddef>
-#include "type_traits.h"
 
-// 类型萃取技术
+//
+// 迭代器标签, 迭代器模板, 迭代器萃取, 迭代器距离, 迭代器前进, 反向迭代器
+//
+
+#include <cstddef>
+
+#include "type_traits.h"
 
 namespace MySTL{
 
@@ -15,19 +19,20 @@ namespace MySTL{
  */
 struct input_iterator_tag {};
 struct output_iterator_tag {};
-struct forward_iterator_tag : public input_iterator_tag {};         //
+struct forward_iterator_tag : public input_iterator_tag {};          //
 struct bidirectional_iterator_tag : public forward_iterator_tag {};  // 双向的
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 
-template <class Category, class T, class Distance = ptrdiff_t,
+template <class Category, class T, class Distance = std::ptrdiff_t,
           class Pointer = T*, class Reference = T&>
 struct iterator {
-    typedef Category            iterator_catatory;
+    typedef Category            iterator_category;
     typedef T                   value_type;
     typedef Pointer             pointer;
     typedef T*                  reference;
     typedef T&                  difference_type;
 };
+
 // 迭代器萃取
 template <class T>
 struct has_iterator_cat {
@@ -44,6 +49,12 @@ public:
     static const bool value = sizeof(test<T>(0)) == sizeof(char);
 };
 
+// ********************************************* iterator_traits_impl ********************************************
+
+/**
+ * @brief 用于提取迭代器的五种类型定义
+ * 第二个bool 值用于判断迭代器是否有iterator_category
+ */
 template <class Iterator, bool>
 struct iterator_traits_impl {};
 
@@ -56,20 +67,26 @@ struct iterator_traits_impl<Iterator, true> {
     typedef typename Iterator::difference_type   difference_type;
 };
 
+// ********************************************* iterator_traits_helper ********************************************
+
+/**
+ * @brief 用于判断迭代器是否有iterator_category
+ */
 template <class Iterator, bool>
 struct iterator_traits_helper {};
 
 template <class Iterator>
 struct iterator_traits_helper<Iterator, true> : public iterator_traits_impl<Iterator, 
-    std::is_convertible<typename Iterator::iterator_category, input_iterator_tag>::value ||
+    std::is_convertible<typename Iterator::iterator_category, input_iterator_tag >::value ||
     std::is_convertible<typename Iterator::iterator_category, output_iterator_tag>::value>
     {};
+
+// ********************************************* iterator_traits ********************************************
 
 // 萃取迭代器特性
 template <class Iterator>
 struct iterator_traits : public iterator_traits_helper<Iterator, has_iterator_cat<Iterator>::value> {};
 
-// TODO: 查阅资料, 偏特化
 // 原生指针偏特化
 template <class T>
 struct iterator_traits<T*> {
@@ -80,6 +97,7 @@ struct iterator_traits<T*> {
     typedef ptrdiff_t                   difference_type;
 };
 
+// 原生指针偏特化(const)
 template <class T>
 struct iterator_traits<const T*> {
     typedef random_access_iterator_tag  iterator_category;
@@ -123,22 +141,26 @@ iterator_category(const Iterator&) {
     typedef typename iterator_traits<Iterator>::iterator_category Category;
     return Category();
 }
+
 // 萃取distance_type
+// FIGUREOUT: why use a pointer
 template <class Iterator>
 typename iterator_traits<Iterator>::difference_type*
 distance_type(const Iterator&) {
-    return static_cast<typename iterator_traits<Iterator>::difference_eype*>(0);
+    return static_cast<typename iterator_traits<Iterator>::difference_type*>(0);
 }
+
 // 萃取value_type
 template <class Iterator>
 typename iterator_traits<Iterator>::value_type*
 value_type(const Iterator&) {
     return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
 }
-/**
- * 计算迭代器距离
- * 
- */
+
+/*****************************************************************************************/
+// distance, 计算迭代器距离
+// 针对input_iterator_tag, 逐个累加, random_access_iterator_tag, 直接相减
+/*****************************************************************************************/
 // 输入迭代器版本
 template <class InputIter>
 typename iterator_traits<InputIter>::difference_type
@@ -156,13 +178,20 @@ distance_dispatch(RandomIter first, RandomIter last, random_access_iterator_tag)
     return last - first;
 }
 
-// advance
+/**
+ * @brief 计算迭代器距离
+ */
 template <class InputIter>
 typename iterator_traits<InputIter>::difference_type
 distance(InputIter first, InputIter last) {
     return distance_dispatch(first, last, iterator_category(first));
 }
 
+/*****************************************************************************************/
+// advance, 前进迭代器
+// input_iterator_tag, 逐个前进, random_access_iterator_tag, 直接相加
+// bidirectional_iterator_tag, 双向迭代器, 根据距离的正负选择前进或后退
+/*****************************************************************************************/
 // 输入迭代器版本
 template <class InputIter, class Distance>
 void advance_dispatch(InputIter& i, Distance n, input_iterator_tag) {
@@ -195,8 +224,8 @@ void advance(InputIter& i, Distance n) {
 }
 
 /**
- * @brief reverse_iterator
- * 反向迭代器
+ * @brief 反向迭代器
+ * @tparam Iterator 直接填入正向迭代器即可
  */
 template <class Iterator>
 class reverse_iterator {
@@ -221,10 +250,13 @@ public:
 public:
     iterator_type base() const { return current; }  // 取出正向迭代器
 
-    // 运算符重载
     reference operator*() const {
         auto tmp = current;
         return *--tmp;
+    }
+
+    pointer operator->() const {
+        return &(operator*());
     }
 
     self& operator--(int) {
@@ -233,12 +265,21 @@ public:
         return tmp;
     }
 
+    self& operator--() {
+        ++current;
+        return *this;
+    }
+
     self& operator++(int) {
         self tmp = *this;
         --current;
         return tmp;
     }
 
+    self& operator++() {
+        --current;
+        return *this;
+    }
 
     self& operator+=(difference_type n) {
         current -= n;

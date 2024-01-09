@@ -724,7 +724,7 @@ list<T>::create_node(Args&&... args) {
 // 销毁节点
 template <class T>
 void list<T>::destory_node(node_ptr p) {
-    data_allocator::destory(MySTL::address_of(p->value));
+    data_allocator::destroy(MySTL::address_of(p->value));
     node_allocator::deallocate(p);
 }
 

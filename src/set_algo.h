@@ -1,10 +1,10 @@
 #ifndef MY_SET_ALGO_H
 #define MY_SET_ALGO_H
 
-/*
- * 头文件包含 set 的四种算法: union, intersection, difference, symmetric_difference
- * 所有函数都要求序列有序
- */
+//
+// 头文件包含 set 的四种算法: union, intersection, difference, symmetric_difference
+// 所有函数都要求序列有序
+//
 
 #include "iterator.h"
 #include "algobase.h"

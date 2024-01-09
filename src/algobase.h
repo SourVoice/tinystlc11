@@ -83,6 +83,7 @@ unchecked_copy(Tp* first, Tp* last,
 
 /**
  * @brief copy form [first, last) to [result, result + (last - first))
+ * @return 返回拷贝结束的尾部(dst 尾部)
  */
 template <class InputIter, class OutputIter>
 OutputIter copy(InputIter first, InputIter last,
@@ -97,7 +98,7 @@ OutputIter copy(InputIter first, InputIter last,
 // copy_backward() for bidirectional_iterator_tag
 template <class BidirectionalIter1, class BidirectionalIter2>
 BidirectionalIter2 unchecked_copy_backward_cat(BidirectionalIter1 first, BidirectionalIter1 last,
-                                               BidirectionalIter1 result, MySTL::bidirectional_iterator_tag) {
+                                               BidirectionalIter2 result, MySTL::bidirectional_iterator_tag) {
     for (auto n = last - first; n > 0; n--)
         *--result = *--last;
     return result;
@@ -114,7 +115,7 @@ BidirectionalIter unchecked_copy_backward_cat(RandIter first, RandIter last,
 
 template <class BidirectionalIter1, class BidirectionalIter2>
 BidirectionalIter2 unchecked_copy_backward(BidirectionalIter1 first, BidirectionalIter1 last,
-                                           BidirectionalIter2 result, MySTL::bidirectional_iterator_tag) {
+                                           BidirectionalIter2 result) {
     return unchecked_copy_backward_cat(first, last, result, iterator_category(first));
 }
 
@@ -122,7 +123,7 @@ BidirectionalIter2 unchecked_copy_backward(BidirectionalIter1 first, Bidirection
 template <class Tp, class Up>
 typename std::enable_if<
     std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
-        std::is_trivially_copy_assignable<Up>::value,
+    std::is_trivially_copy_assignable<Up>::value,
     Up*>::type
 unchecked_copy_backward(Tp* first, Tp* last,
                         Up* result) {
@@ -136,6 +137,7 @@ unchecked_copy_backward(Tp* first, Tp* last,
 
 /**
  * @brief copy form [first, last), to [result - (last - first), result)
+ * @return result - (last - first) 处的迭代器
  */
 template <class BidirectionalIter1, class BidirectionalIter2>
 BidirectionalIter2 copy_backward(BidirectionalIter1 first, BidirectionalIter1 last,
@@ -143,9 +145,13 @@ BidirectionalIter2 copy_backward(BidirectionalIter1 first, BidirectionalIter1 la
     return unchecked_copy_backward(first, last, result);
 }
 
+/*****************************************************************************************/
+// copy_if()
+// copy [first, last), 内满足操作 unary_pred 的元素拷贝到result起始的位置
+/*****************************************************************************************/
 /**
- * copy_if()
  * @brief copy [first, last), 内满足操作 unary_pred 的元素拷贝到result起始的位置
+ * @return 返回 result的尾部
  */
 template <class InputIter, class OutputIter, class UnaryPredicate>
 OutputIter copy_if(InputIter first, InputIter last,
@@ -162,6 +168,7 @@ OutputIter copy_if(InputIter first, InputIter last,
 /*****************************************************************************************/
 // copy_n()
 // 把 [first, first + n)区间上的元素拷贝到 [result, result + n)上
+// 返回一个 pair 分别指向拷贝结束的尾部(src的尾部和dst的尾部)
 /*****************************************************************************************/
 // copy_n() for input_iterator_tag
 template <class InputIter, class Size, class OutputIter>
@@ -218,14 +225,13 @@ template <class InputIter, class OutputIter>
 OutputIter unchecked_move(InputIter first, InputIter last,
                           OutputIter result) {
     return unchecked_move_cat(first, last, result, iterator_category(first));
-    // FIGUREOUT: iterator_category()和iterator_traits区别
 }
 
 // move() 为 trivially_copy_assignable类型提供的特化版本
 template <class Tp, class Up>
 typename std::enable_if<
     std::is_same<typename std::remove_const<Tp>::type, Up>::value &&
-        std::is_trivially_move_assignable<Up>::value,
+    std::is_trivially_move_assignable<Up>::value,
     Up*>::type
 unchecked_move(Tp* first, Tp* last,
                Up* result) {
@@ -237,6 +243,7 @@ unchecked_move(Tp* first, Tp* last,
 
 /**
  * @brief move [first, last) to [result, result + (last - first))
+ * @return 返回 dst 的尾部
  */
 template <class InputIter, class OutputIter>
 OutputIter move(InputIter first, InputIter last,
@@ -289,6 +296,7 @@ unchecked_move_backward(Tp* first, Tp* last, Up* result) {
 
 /**
  * @brief 将[first, last)内的元素移动到[result - (last - first), result)
+ * @return 返回 result - (last - first) 处的迭代器
  */
 template <class BidirectionalIter1, class BidirectionalIter2>
 BidirectionalIter2 move_backward(BidirectionalIter1 first, BidirectionalIter1 last,
@@ -296,8 +304,11 @@ BidirectionalIter2 move_backward(BidirectionalIter1 first, BidirectionalIter1 la
     return unchecked_move_backward(first, last, result);
 }
 
+/*****************************************************************************************/
+// equal()
+// 比较[first, last) 和第二个序列对应的区间是否相等
+/*****************************************************************************************/
 /**
- * equal()
  * @brief 比较[first, last) 和第二个序列对应的区间是否相等
  */
 template <class InputIter1, class InputIter2>
@@ -334,7 +345,8 @@ OutputIter unchecked_fill_n(OutputIter first, Size n, const T& value) {
 template <class Tp, class Size, class Up>
 typename std::enable_if<
     std::is_integral<Tp>::value && sizeof(Tp) == 1 &&
-        !std::is_same<Tp, bool>::value && std::is_integral<Up>::value && sizeof(Up) == 1,
+   !std::is_same<Tp, bool>::value && 
+    std::is_integral<Up>::value && sizeof(Up) == 1,
     Tp*>::type
 unchecked_fill_n(Tp* first, Size n, Up value) {
     if (n > 0)
@@ -375,9 +387,12 @@ void fill(ForwardIter first, ForwardIter last, const T& value) {
     fill_cat(first, last, value, iterator_category(first));
 }
 
+/*****************************************************************************************/
+// lexicographical_compare()
+// details below
+/*****************************************************************************************/
 /**
  * @brief
- * lexicographical_compare()
  * 以字典序排列对两个序列进行比较，当在某个位置发现第一组不相等元素时，有下列几种情况：
  * (1)如果第一序列的元素较小，返回 true ，否则返回 false
  * (2)如果到达 last1 而尚未到达 last2 返回 true
@@ -414,12 +429,17 @@ bool lexicographical_compare(const unsigned char* first1, const unsigned char* l
                              const unsigned char* first2, const unsigned char* last2) {
     const auto len1 = last1 - first1;
     const auto len2 = last2 - first2;
-    const auto result = std::memcmp(first1, first2, MySTL::min(len1, len2));
-    return (result != 0) ? (result < 0) : (len1 < len2);
+    const auto result = std::memcmp(first1, first2, MySTL::min(len1, len2));  // 比较长度相同的部分
+    return (result != 0) ? (result < 0) : (len1 < len2); // 若相等, 长度长的大
 }
+
+/*****************************************************************************************/
+// mismatch
+// 平行比较两个序列，找到第一处失配的元素，返回一对迭代器，分别指向两个序列中失配的元素
+/*****************************************************************************************/
 /**
- * mismatch()
- * @brief 平行比较两个序列, 找到第一处失配的元素, 返回一对迭代器, 指向两个序列中失配的元素
+ * @brief 平行比较两个序列, 找到第一处失配的元素
+ * @return 返回一对迭代器, 指向两个序列中失配的元素
  */
 template <class InputIter1, class InputIter2>
 MySTL::pair<InputIter1, InputIter2>

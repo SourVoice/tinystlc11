@@ -83,7 +83,7 @@ public:
                 swap(tmp);
             } else if (size() >= len) {
                 auto i = MySTL::copy(rhs.begin(), rhs.end(), begin_);
-                data_allocator::destory(i, end_);
+                data_allocator::destroy(i, end_);
                 end_ = begin_ + len;
             } else {
                 MySTL::copy(rhs.begin(), rhs.begin() + size(), begin_);
@@ -96,7 +96,7 @@ public:
 
     // 移动赋值操作
     vector& operator=(vector&& rhs) noexcept {
-        destory_and_recover(begin_, end_, cap_ - begin_);
+        destroy_and_recover(begin_, end_, cap_ - begin_);
         begin_ = rhs.begin_;
         end_ = rhs.end_;
         cap_ = rhs.cap_;
@@ -114,7 +114,7 @@ public:
 
     // 析构
     ~vector() {
-        destory_and_recover(begin_, end_, cap_ - begin_);
+        destroy_and_recover(begin_, end_, cap_ - begin_);
         begin_ = end_ = cap_ = nullptr;
     }
 
@@ -263,7 +263,7 @@ private:
     template <class Iter>
     void range_init(Iter first, Iter last);
 
-    void destory_and_recover(iterator first, iterator last, size_type n);
+    void destroy_and_recover(iterator first, iterator last, size_type n);
 
     // 增长容量
     size_type get_new_cap(size_type add_size);
@@ -368,7 +368,7 @@ void vector<T>::push_back(const value_type& value) {
 template <class T>
 void vector<T>::pop_back() {
     MYSTL_DEBUG(!empty());
-    data_allocator::destory(end_ - 1);
+    data_allocator::destroy(end_ - 1);
     --end_;
 }
 
@@ -403,7 +403,7 @@ vector<T>::erase(const_iterator pos) {
     MYSTL_DEBUG(pos < end() && pos >= begin());
     iterator xpos = begin_ + (pos - begin());
     MySTL::move(xpos + 1, end_, xpos);
-    data_allocator::destory(end_ - 1);
+    data_allocator::destroy(end_ - 1);
     --end_;
     return xpos;
 }
@@ -415,7 +415,7 @@ vector<T>::erase(const_iterator first, const_iterator last) {
     MYSTL_DEBUG(first >= begin() && last <= end() && !(last < first));
     const auto n = first - begin();
     iterator   r = begin_ + n;
-    data_allocator::destory(MySTL::move(r + (last - first), end_, r), end_);
+    data_allocator::destroy(MySTL::move(r + (last - first), end_, r), end_);
     end_ = end_ - (last - first);
     return begin_ + n;
 }
@@ -493,8 +493,8 @@ void vector<T>::range_init(Iter first, Iter last) {
 }
 
 template <class T>
-void vector<T>::destory_and_recover(iterator first, iterator last, size_type n) {
-    data_allocator::destory(first, last);
+void vector<T>::destroy_and_recover(iterator first, iterator last, size_type n) {
+    data_allocator::destroy(first, last);
     data_allocator::deallocate(first, n);
 }
 
@@ -552,7 +552,7 @@ void vector<T>::copy_assign(Iter first, Iter last, forward_iterator_tag) {
         swap(tmp);
     } else if (size() >= len) {
         auto new_end = MySTL::copy(first, last, begin_);
-        data_allocator::destory(new_end, end_);
+        data_allocator::destroy(new_end, end_);
         end_ = new_end;
     } else {
         auto mid = first;
@@ -579,7 +579,7 @@ void vector<T>::reallocate_emplace(iterator pos, Args&&... args) {
         data_allocator::deallocate(new_begin, new_size);
         throw;
     }
-    destory_and_recover(begin_, end_, cap_ - begin_);
+    destroy_and_recover(begin_, end_, cap_ - begin_);
     begin_ = new_begin;
     end_ = new_end;
     cap_ = new_begin + new_size;
@@ -601,7 +601,7 @@ void vector<T>::reallocate_insert(iterator pos, const value_type& value) {
         data_allocator::deallocate(new_begin, new_size);
         throw;
     }
-    destory_and_recover(begin_, end_, cap_ - begin_);
+    destroy_and_recover(begin_, end_, cap_ - begin_);
     begin_ = new_begin;
     end_ = new_end;
     cap_ = new_begin + new_size;
@@ -637,7 +637,7 @@ vector<T>::fill_insert(iterator pos, size_type n, const value_type& value) {
             new_end = MySTL::uninitialized_fill_n(new_end, n, value);
             new_end = MySTL::uninitialized_move(pos, end_, new_end);
         } catch (...) {
-            destory_and_recover(new_begin, new_end, new_size);
+            destroy_and_recover(new_begin, new_end, new_size);
             throw;
         }
         data_allocator::deallocate(begin_, cap_ - begin_);
@@ -678,7 +678,7 @@ void vector<T>::copy_insert(iterator pos, Iter first, Iter last) {
             new_end = MySTL::uninitialized_copy(first, last, new_end);
             new_end = MySTL::uninitialized_move(pos, end_, new_end);
         } catch (...) {
-            destory_and_recover(new_begin, new_end, new_size);
+            destroy_and_recover(new_begin, new_end, new_size);
             throw;
         }
         data_allocator::deallocate(begin_, cap_ - begin_);

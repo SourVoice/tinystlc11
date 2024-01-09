@@ -1,7 +1,13 @@
 #ifndef MY_TYPE_TRAITS_H
 #define MY_TYPE_TRAITS_H
 
+// 
+// <type_traits>用于元编程，萃取类型信息，获取受支持的操作(如移动构造函数)等
+// 本头文件主要使用辅助类，intergral_constant, bool_constant, true_type, false_type
+// 
+
 #include <type_traits>
+
 namespace MySTL {
 
 template <class T, T v>

@@ -48,29 +48,31 @@ void release_temporary_buffer(T* ptr){
 }
 
 template <class ForwardIter, class T>
-class temporary_buffer{
+class temporary_buffer {
 private:
-    ptrdiff_t original_len;     // 缓冲区申请大小
-    ptrdiff_t len;              // 缓冲区实际大小
-    T*        buffer;           // 缓冲区指针
-    // 构造析构函数 
+    ptrdiff_t original_len;  // 缓冲区申请大小
+    ptrdiff_t len;           // 缓冲区实际大小
+    T*        buffer;        // 缓冲区指针
+
 public:
+    // 构造析构函数
     temporary_buffer(ForwardIter first, ForwardIter last);
     ~temporary_buffer() {
-        MySTL::destory(buffer, buffer * len);
+        MySTL::destroy(buffer, buffer + len);
         free(buffer);
     }
+
 public:
     ptrdiff_t size()                const noexcept { return len; }
     ptrdiff_t requested_size()      const noexcept { return original_len; }
     T*        begin()               noexcept { return buffer; }
     T*        end()                 noexcept { return buffer + len; }
 
-    // 初始化缓冲区内容
 private:
+    // 初始化缓冲区内容
     void allocate_buffer();
     void initialize_buffer(const T& value, std::true_type) {}
-    void initialize_buffer(const T& value, std::false_type){
+    void initialize_buffer(const T& value, std::false_type) {
         MySTL::uninitialized_fill_n(buffer, len, value);
     }
 
@@ -78,7 +80,8 @@ private:
     temporary_buffer(const temporary_buffer&);
     void operator=(const temporary_buffer&);
 };
-// temporaray_buffer类函数定义
+
+// temporaray_buffer类构造函数
 template <class ForwardIter, class T>
 temporary_buffer<ForwardIter, T>::temporary_buffer(ForwardIter first, ForwardIter last) {
     try {
@@ -92,11 +95,12 @@ temporary_buffer<ForwardIter, T>::temporary_buffer(ForwardIter first, ForwardIte
         len = 0;
     }
 }
-template<class ForwardIter, class T>
-void temporary_buffer<ForwardIter, T>::allocate_buffer(){
-    original_len  = len; 
-    if( len > static_cast<ptrdiff_t>(INT_MAX / sizeof(T))) len = INT_MAX / sizeof(T);
-    while(len > 0){
+
+template <class ForwardIter, class T>
+void temporary_buffer<ForwardIter, T>::allocate_buffer() {
+    original_len = len;
+    if (len > static_cast<ptrdiff_t>(INT_MAX / sizeof(T))) len = INT_MAX / sizeof(T);
+    while (len > 0) {
         buffer = static_cast<T*>(malloc(len * sizeof(T)));
         if (buffer) break;
         len /= 2;

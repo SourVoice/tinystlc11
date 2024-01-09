@@ -326,7 +326,7 @@ public:
     basic_string& operator=(value_type ch);
 
     ~basic_string() noexcept {
-        destory_buffer();
+        destroy_buffer();
     }
 
 public:
@@ -606,7 +606,7 @@ private:
 
     /*********************************** helper function ***********************************/
 
-    // init and destory
+    // init and destroy
     void try_init() noexcept;
 
     void fill_init(size_type n, value_type ch);
@@ -619,7 +619,7 @@ private:
 
     void init_from(const_pointer src, size_type pos, size_type n);
 
-    void destory_buffer();
+    void destroy_buffer();
 
     // 返回一个指向存储字符串数据的底层字符数组的指针
     const_pointer to_raw_pointer() const;
@@ -664,7 +664,7 @@ template <class CharType, class CharTraits>
 basic_string<CharType, CharTraits>&
 basic_string<CharType, CharTraits>::
 operator=(basic_string&& rhs) noexcept {
-    destory_buffer();
+    destroy_buffer();
     buffer_ = rhs.buffer_;
     size_ = rhs.size_;
     cap_ = rhs.cap_;
@@ -1483,7 +1483,7 @@ init_from(const_pointer src, size_type pos, size_type count) {
 
 template <class CharType, class CharTraits>
 void basic_string<CharType, CharTraits>::
-destory_buffer() {
+destroy_buffer() {
     if (buffer_ != nullptr){
         data_allocator::deallocate(buffer_, cap_);
         buffer_ = nullptr;

@@ -1,8 +1,10 @@
 #ifndef MY_UTIL_H
 #define MY_UTIL_H
-/**
- * general uitlty
- */
+
+// 
+// 通用工具，包含move, forward, swap, pair，以及pair的比较操作符，make_pair
+//
+
 #include <cstddef>
 
 #include "type_traits.h"

@@ -24,22 +24,22 @@ struct deque_buf_size {
 };
 
 // deque 迭代器设计
-template <class T, class Ref, class Ptr>
-struct deque_iterator : public iterator<random_access_iterator_tag, T> {
-    typedef deque_iterator<T, T&, T*>             iterator;
-    typedef deque_iterator<T, const T&, const T&> const_iterator;
+template <class t, class ref, class ptr>
+struct deque_iterator : public iterator<random_access_iterator_tag, t> {
+    typedef deque_iterator<t, t&, t*>             iterator;
+    typedef deque_iterator<t, const t&, const t*> const_iterator;
     typedef deque_iterator                        self;
 
-    static const size_t buffer_size = deque_buf_size<T>::value;
+    static const size_t buffer_size = deque_buf_size<t>::value;
 
-    typedef random_access_iterator_tag iterator_catatory;
-    typedef T                          value_type;
-    typedef Ptr                        pointer;
-    typedef Ref                        reference;
+    typedef random_access_iterator_tag iterator_category;
+    typedef t                          value_type;
+    typedef ptr                        pointer;
+    typedef ref                        reference;
     typedef size_t                     size_type;
     typedef ptrdiff_t                  difference_type;
-    typedef T*                         value_pointer;
-    typedef T**                        map_pointer;
+    typedef t*                         value_pointer;
+    typedef t**                        map_pointer;
 
     value_pointer cur;
     value_pointer first;
@@ -49,11 +49,11 @@ struct deque_iterator : public iterator<random_access_iterator_tag, T> {
     /*********************************** 构造，复制，移动，析构 ***********************************/
 
     deque_iterator() noexcept : cur(nullptr), first(nullptr), last(nullptr), node(nullptr) {}
-    deque_iterator(value_pointer v, map_pointer n) noexcept : cur(v), first(*n), last(*n + buffer_size), node(n) {}
+    deque_iterator(value_pointer v, map_pointer n) : cur(v), first(*n), last(*n + buffer_size), node(n) {}
 
     // 复制
-    deque_iterator(const iterator& rhs) noexcept : cur(rhs.cur), first(rhs.first), last(rhs.last), node(rhs.node) {}
-    deque_iterator(const const_iterator& rhs) noexcept : cur(rhs.cur), first(rhs.first), last(rhs.last), node(rhs.node) {}
+    deque_iterator(const iterator& rhs) : cur(rhs.cur), first(rhs.first), last(rhs.last), node(rhs.node) {}
+    deque_iterator(const const_iterator& rhs) : cur(rhs.cur), first(rhs.first), last(rhs.last), node(rhs.node) {}
 
     // 移动
     deque_iterator(iterator&& rhs) noexcept : cur(rhs.cur), first(rhs.first), last(rhs.last), node(rhs.node) {
@@ -129,7 +129,7 @@ struct deque_iterator : public iterator<random_access_iterator_tag, T> {
         } else {
             const auto node_offset = offset > 0 
                 ? offset / static_cast<difference_type>(buffer_size) 
-                : -static_cast<difference_type>((-offset - 1) / buffer_size);
+                : -static_cast<difference_type>((-offset - 1) / buffer_size) - 1;
             set_node(node + node_offset);
             cur = first + (offset - node_offset * static_cast<difference_type>(buffer_size));
         }
@@ -154,10 +154,10 @@ struct deque_iterator : public iterator<random_access_iterator_tag, T> {
 
     // 比较运算符
     bool operator==(const self& rhs) const { return cur == rhs.cur; }
-    bool operator < (const self& rhs) const {
+    bool operator<(const self& rhs) const {
         return node == rhs.node ? (cur < rhs.cur) : (node < rhs.node);
     }
-    bool operator != (const self&rhs) const {return !(*this == rhs);}
+    bool operator!=(const self& rhs) const { return !(*this == rhs); }
     bool operator>(const self& rhs) const { return rhs < *this; }
     bool operator<=(const self& rhs) const { return !(rhs < *this); }
     bool operator>=(const self& rhs) const { return !(*this < rhs); }
@@ -213,12 +213,6 @@ public:
         copy_init(first, last, iterator_category(first));
     }
 
-    template <class Iter, typename std::enable_if<MySTL::is_forward_iterator<Iter>::value, int>::type = 0>
-    deque(Iter first, Iter last) {
-        MYSTL_DEBUG(!(last < first));
-        copy_init(first, last, iterator_category(first));
-    }
-
     deque(std::initializer_list<value_type> ilist) { copy_init(ilist.begin(), ilist.end(), MySTL::forward_iterator_tag()); }
 
     // 复制
@@ -234,11 +228,10 @@ public:
         rhs.map_size_ = 0;
     }
 
-    // 重载赋值运算符
     deque& operator=(const deque& rhs);
     deque& operator=(deque&& rhs);
 
-    deque&operator=(std::initializer_list<value_type> ilist) {
+    deque& operator=(std::initializer_list<value_type> ilist) {
         deque tmp(ilist);
         swap(tmp);
         return *this;
@@ -323,8 +316,7 @@ public:
     // assign
     void assign(size_type n, const value_type& value) { fill_assign(n, value); }
 
-    template <class Iter, typename std::enable_if<
-                              MySTL::is_input_iterator<Iter>::value, int>::type = 0>
+    template <class Iter, typename std::enable_if<MySTL::is_input_iterator<Iter>::value, int>::type = 0>
     void assign(Iter first, Iter last) { copy_assign(first, last, iterator_category(first)); }
 
     void assign(std::initializer_list<value_type> ilist) { copy_assign(ilist.begin(), ilist.end(), MySTL::forward_iterator_tag()); }
@@ -375,7 +367,7 @@ private:
     // 创建queue中的buffer缓冲区
     map_pointer create_map(size_type size);
     void        create_buffer(map_pointer nstart, map_pointer nfinish);
-    void        destory_buffer(map_pointer nstart, map_pointer nfinish);
+    void        destroy_buffer(map_pointer nstart, map_pointer nfinish);
 
     // 初始化，构造函数
     void map_init(size_type nelem);
@@ -464,13 +456,13 @@ template <class T>
 template <class... Args>
 void deque<T>::emplace_front(Args&&... args) {
     if (begin_.cur != begin_.first) {
-        data_allocator::construt(begin_.cur - 1, MySTL::forward<Args>(args)...);
+        data_allocator::construct(begin_.cur - 1, MySTL::forward<Args>(args)...);
         --begin_.cur;
     } else {
         require_capacity(1, true);
         try {
             --begin_;
-            data_allocator::construt(begin_.cur, MySTL::forward<Args>(args)...);
+            data_allocator::construct(begin_.cur, MySTL::forward<Args>(args)...);
         } catch (...) {
             ++begin_;
             throw;
@@ -483,11 +475,11 @@ template <class T>
 template <class... Args>
 void deque<T>::emplace_back(Args&&... args) {
     if (end_.cur != end_.last - 1) {
-        data_allocator::construt(end_.cur, MySTL::forward<Args>(args)...);
+        data_allocator::construct(end_.cur, MySTL::forward<Args>(args)...);
         ++end_.cur;
     } else {
         require_capacity(1, false);
-        data_allocator::construt(end_.cur, MySTL::forward<Args>(args)...);
+        data_allocator::construct(end_.cur, MySTL::forward<Args>(args)...);
         ++end_;
     }
 }
@@ -508,13 +500,13 @@ typename deque<T>::iterator deque<T>::emplace(iterator pos, Args&&... args) {
 template <class T>
 void deque<T>::push_front(const value_type& value) {
     if (begin_.cur != begin_.first) {
-        data_allocator::construt(begin_.cur - 1, value);
+        data_allocator::construct(begin_.cur - 1, value);
         --begin_.cur;
     } else {
         require_capacity(1, true);
         try {
             --begin_;
-            data_allocator::construt(begin_.cur, value);
+            data_allocator::construct(begin_.cur, value);
         } catch (...) {
             ++begin_;
             throw;
@@ -525,11 +517,11 @@ void deque<T>::push_front(const value_type& value) {
 template <class T>
 void deque<T>::push_back(const value_type& value) {
     if (end_.cur != end_.last - 1) {
-        data_allocator::construt(end_.cur, value);
+        data_allocator::construct(end_.cur, value);
         ++end_.cur;
     } else {
         require_capacity(1, false);
-        data_allocator::construt(end_.cur, value);
+        data_allocator::construct(end_.cur, value);
         ++end_;
     }
 }
@@ -538,12 +530,12 @@ template <class T>
 void deque<T>::pop_front() {
     MYSTL_DEBUG(!empty());
     if (begin_.cur != begin_.last - 1) {
-        data_allocator::destory(begin_.cur);
+        data_allocator::destroy(begin_.cur);
         ++begin_.cur;
     } else {
-        data_allocator::destory(begin_.cur);
+        data_allocator::destroy(begin_.cur);
         ++begin_;
-        destory_buffer(begin_.node - 1, begin_.node - 1);
+        destroy_buffer(begin_.node - 1, begin_.node - 1);
     }
 }
 
@@ -552,11 +544,11 @@ void deque<T>::pop_back() {
     MYSTL_DEBUG(!empty());
     if (end_.cur != end_.first) {
         --end_.cur;
-        data_allocator::destory(end_.cur);
+        data_allocator::destroy(end_.cur);
     } else {
         --end_;
-        data_allocator::destory(end_.cur);
-        destory_buffer(end_.node + 1, end_.node + 1);
+        data_allocator::destroy(end_.cur);
+        destroy_buffer(end_.node + 1, end_.node + 1);
     }
 }
 
@@ -637,12 +629,12 @@ deque<T>::erase(iterator first, iterator last) {
         if (elems_before < ((size() - len) / 2)) {
             MySTL::copy_backward(begin_, first, last);
             auto new_begin = begin_ + len;
-            data_allocator::destory(begin_.cur, new_begin.cur);
+            data_allocator::destroy(begin_.cur, new_begin.cur);
             begin_ = new_begin;
         } else {
             MySTL::copy(last, end_, first);
             auto new_end = end_ - len;
-            data_allocator::destory(new_end.cur, end_.cur);
+            data_allocator::destroy(new_end.cur, end_.cur);
             end_ = new_end;
         }
         return begin_ + elems_before;
@@ -653,13 +645,13 @@ template <class T>
 void deque<T>::clear() {
     // clear 保留头部缓冲区
     for (map_pointer cur = begin_.node + 1; cur < end_.node; ++cur) {
-        data_allocator::destory(*cur, *cur + buffer_size);
+        data_allocator::destroy(*cur, *cur + buffer_size);
     }
     if (begin_.node != end_.node) {
-        MySTL::destory(begin_.cur, begin_.last);
-        MySTL::destory(end_.first, end_.cur);
+        MySTL::destroy(begin_.cur, begin_.last);
+        MySTL::destroy(end_.first, end_.cur);
     } else {
-        MySTL::destory(begin_.cur, end_.cur);
+        MySTL::destroy(begin_.cur, end_.cur);
     }
     shrink_to_fit();
     end_ = begin_;
@@ -668,7 +660,7 @@ void deque<T>::clear() {
 // swap
 template <class T>
 void deque<T>::swap(deque& rhs) noexcept {
-    if (this != &rhs) { // TODO: ? what is &rhs
+    if (this != &rhs) {
         MySTL::swap(begin_, rhs.begin_);
         MySTL::swap(end_, rhs.end_);
         MySTL::swap(map_, rhs.map_);
@@ -708,7 +700,7 @@ void deque<T>::create_buffer(map_pointer nstart, map_pointer nfinish) {
 }
 
 template <class T>
-void deque<T>::destory_buffer(map_pointer nstart, map_pointer nfinish) {
+void deque<T>::destroy_buffer(map_pointer nstart, map_pointer nfinish) {
     for (map_pointer cur = nstart; cur <= nfinish; ++cur) {
         data_allocator::deallocate(*cur, buffer_size);
         *cur = nullptr;
@@ -735,7 +727,7 @@ void deque<T>::map_init(size_type nelem) {
     try {
         create_buffer(nstart, nfinish);
     } catch (...) {
-        map_allocator::deallocte(map_, map_size_);
+        map_allocator::deallocate(map_, map_size_);
         map_ = nullptr;
         map_size_ = 0;
         throw;
@@ -820,8 +812,8 @@ void deque<T>::copy_assign(Iter first, Iter last, forward_iterator_tag) {
     if (len1 < len2) {
         auto next = first;
         MySTL::advance(next, len1);
-        MySTL::copy(next, first, begin_);
-        insert_dispatch(end_, first, last, input_iterator_tag{});
+        MySTL::copy(first, next, begin_);
+        insert_dispatch(end_, next, last, forward_iterator_tag{});
     } else {
         erase(MySTL::copy(first, last, begin_), end_);
     }
@@ -882,11 +874,12 @@ void deque<T>::fill_insert(iterator pos, size_type n, const value_type& value) {
             }
         } catch (...) {
             if (new_begin.node != begin_.node) {
-                destory_buffer(new_begin.node, begin_.node - 1);
+                destroy_buffer(new_begin.node, begin_.node - 1);
             }
             throw;
         }
     } else {
+        require_capacity(n, false);
         auto            old_end = end_;
         auto            new_end = end_ + n;
         const size_type elems_after = len - elems_before;
@@ -906,8 +899,69 @@ void deque<T>::fill_insert(iterator pos, size_type n, const value_type& value) {
             }
         } catch (...) {
             if (new_end.node != end_.node) {
-                destory_buffer(end_.node + 1, new_end.node);
+                destroy_buffer(end_.node + 1, new_end.node);
             }
+            throw;
+        }
+    }
+}
+
+template <class T>
+template <class Iter>
+void deque<T>::copy_insert(iterator pos, Iter first, Iter last, size_type n) {
+    const size_type elems_before = pos - begin_;
+    auto            len = size();
+    if (elems_before < (len / 2)) {
+        require_capacity(n, true);
+        // 原来的迭代器可能会失效
+        auto old_begin = begin_;
+        auto new_begin = begin_ - n;
+        pos = begin_ + elems_before;
+        try {
+            if (elems_before >= n) {
+                auto begin_n = begin_ + n;
+                MySTL::uninitialized_copy(begin_, begin_n, new_begin);
+                begin_ = new_begin;
+                MySTL::copy(begin_n, pos, old_begin);
+                MySTL::copy(first, last, pos - n);
+            } else {
+                auto mid = first;
+                MySTL::advance(mid, n - elems_before);
+                MySTL::uninitialized_copy(first, mid,
+                                          MySTL::uninitialized_copy(begin_, pos, new_begin));
+                begin_ = new_begin;
+                MySTL::copy(mid, last, old_begin);
+            }
+        } catch (...) {
+            if (new_begin.node != begin_.node)
+                destroy_buffer(new_begin.node, begin_.node - 1);
+            throw;
+        }
+    } else {
+        require_capacity(n, false);
+        // 原来的迭代器可能会失效
+        auto       old_end = end_;
+        auto       new_end = end_ + n;
+        const auto elems_after = len - elems_before;
+        pos = end_ - elems_after;
+        try {
+            if (elems_after > n) {
+                auto end_n = end_ - n;
+                MySTL::uninitialized_copy(end_n, end_, end_);
+                end_ = new_end;
+                MySTL::copy_backward(pos, end_n, old_end);
+                MySTL::copy(first, last, pos);
+            } else {
+                auto mid = first;
+                MySTL::advance(mid, elems_after);
+                MySTL::uninitialized_copy(pos, end_,
+                                          MySTL::uninitialized_copy(mid, last, end_));
+                end_ = new_end;
+                MySTL::copy(first, mid, pos);
+            }
+        } catch (...) {
+            if (new_end.node != end_.node)
+                destroy_buffer(end_.node + 1, new_end.node);
             throw;
         }
     }
@@ -944,7 +998,7 @@ void deque<T>::insert_dispatch(iterator pos, Iter first, Iter last, forward_iter
             begin_ = new_begin;
         } catch (...) {
             if (new_begin.node != begin_.node)
-                destory_buffer(new_begin.node, begin_.node - 1);
+                destroy_buffer(new_begin.node, begin_.node - 1);
             throw;
         }
     } else if (pos.cur == end_.cur) {
@@ -955,7 +1009,7 @@ void deque<T>::insert_dispatch(iterator pos, Iter first, Iter last, forward_iter
             end_ = new_end;
         } catch (...) {
             if (new_end.node != end_.node)
-                destory_buffer(end_.node + 1, new_end.node);
+                destroy_buffer(end_.node + 1, new_end.node);
             throw;
         }
     } else {
@@ -973,9 +1027,9 @@ void deque<T>::require_capacity(size_type n, bool front) {
             return;
         }
         create_buffer(begin_.node - need_buffer, begin_.node - 1);
-    } else if (!front && (static_cast<size_type>(end_.last - end_.cur - 1))) {
+    } else if (!front && (static_cast<size_type>(end_.last - end_.cur - 1) < n)) {
         const size_type need_buffer = (n - (end_.last - end_.cur - 1)) / buffer_size + 1;
-        if (need_buffer > static_cast<size_type>(map_ + map_size_) - end_.node - 1) {
+        if (need_buffer > static_cast<size_type>((map_ + map_size_) - end_.node - 1)) {
             reallocate_map_at_back(need_buffer);
             return;
         }
@@ -999,14 +1053,13 @@ void deque<T>::reallocate_map_at_front(size_type need_buffer) {
         *begin1 = *begin2;
     }
     // 更新数据
-    map_allocator::deallocte(map_, map_size_);
-    map_ = new_buffer;
+    map_allocator::deallocate(map_, map_size_);
+    map_ = new_map;
     map_size_ = new_map_size;
     begin_ = iterator(*mid + (begin_.cur - begin_.first), mid);
     end_ = iterator(*(end - 1) + (end_.cur - end_.first), end - 1);
 }
 
-// FIGUREOUT: 重新分配内存的指针操作
 template <class T>
 void deque<T>::reallocate_map_at_back(size_type need_buffer) {
     const size_type new_map_size = MySTL::max(map_size_ << 1, map_size_ + need_buffer + DEQUE_MAP_INIT_SIZE);
@@ -1018,12 +1071,12 @@ void deque<T>::reallocate_map_at_back(size_type need_buffer) {
     auto begin = new_map + (new_map_size - new_buffer) / 2;
     auto mid = begin + old_buffer;
     auto end = mid + need_buffer;
-    create_buffer(mid, mid - 1);
-    for (auto begin1 = mid, begin2 = begin_.node; begin1 != end; ++begin1, ++begin2) {
+    for (auto begin1 = begin, begin2 = begin_.node; begin1 != mid; ++begin1, ++begin2) {
         *begin1 = *begin2;
     }
+    create_buffer(mid, end - 1);
     // 更新数据
-    map_allocator::deallocte(map_, map_size_);
+    map_allocator::deallocate(map_, map_size_);
     map_ = new_map;
     map_size_ = new_map_size;
     begin_ = iterator(*begin + (begin_.cur - begin_.first), begin);
