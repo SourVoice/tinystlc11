@@ -148,7 +148,7 @@ struct list_const_iterator : public MySTL::iterator<bidirectional_iterator_tag, 
 
     list_const_iterator(const list_const_iterator<T>&rhs) : node_(rhs.node_) {}
 
-    reference operator*() const { return node_->as_node()->value(); }
+    reference operator*() const { return node_->as_node()->value; }
     pointer   operator->() const { return &(operator*()); }
 
     self& operator++() {
@@ -254,7 +254,7 @@ public:
     }
 
     list& operator=(std::initializer_list<T> ilist) {
-        list tmp(ilist.begin, ilist.end());
+        list tmp(ilist.begin(), ilist.end());
         swap(tmp);
         return *this;
     }
@@ -263,7 +263,7 @@ public:
     ~list() {
         if (node_) {
             clear();
-            base_allocator::deallocte(node_);
+            base_allocator::deallocate(node_);
             node_ = nullptr;
             size_ = 0;
         }
@@ -278,13 +278,15 @@ public:
     iterator       end() noexcept { return node_; }
     const_iterator end() const noexcept { return node_; }
 
-    reverse_iterator       rbgin() noexcept { return reverse_iterator(end()); }
-    const_reverse_iterator rbgin() const noexcept { return reverse_iterator(end()); }
+    reverse_iterator       rbegin() noexcept { return reverse_iterator(end()); }
+    const_reverse_iterator rbegin() const noexcept { return reverse_iterator(end()); }
     reverse_iterator       rend() noexcept { return reverse_iterator(begin()); }
     const_reverse_iterator rend() const noexcept { return reverse_iterator(begin()); }
 
-    const_iterator cbegin() const noexcept { return begin(); }
-    const_iterator cend() const noexcept { return end(); }
+    const_iterator         cbegin() const noexcept { return begin(); }
+    const_iterator         cend() const noexcept { return end(); }
+    const_reverse_iterator crbegin() const noexcept { return rbegin(); }
+    const_reverse_iterator crend() const noexcept { return rend(); }
 
     /***********************************  容器相关操作 ***********************************/
 
@@ -329,7 +331,7 @@ public:
     void emplace_front(Args&&... args) {
         THROW_LENGTH_ERROR_IF(size_ + 1 > max_size(), "list<T>'s size too big");
         auto link_node = create_node(MySTL::forward<Args>(args)...);
-        link_nodes_at_front(link_node->as_base(), link_node->ase_base());
+        link_nodes_at_front(link_node->as_base(), link_node->as_base());
         ++size_;
     }
 
@@ -337,18 +339,19 @@ public:
     void emplace_back(Args&&... args) {
         THROW_LENGTH_ERROR_IF(size_ + 1 > max_size(), "list<T>'s size too big");
         auto link_node = create_node(MySTL::forward<Args>(args)...);
-        link_nodes_at_back(link_node->as_base(), link_node->ase_base());
+        link_nodes_at_back(link_node->as_base(), link_node->as_base());
         ++size_;
     }
 
     template <class... Args>
-    void emplace(Args&&... args) {
+    iterator emplace(const_iterator pos, Args&&... args) {
         THROW_LENGTH_ERROR_IF(size_ + 1 > max_size(), "list<T>'s size too big");
         auto link_node = create_node(MySTL::forward<Args>(args)...);
-        link_nodes(link_node->as_base(), link_node->ase_base());
+        link_nodes(pos.node_, link_node->as_base(), link_node->as_base());
         ++size_;
+        return iterator(link_node);
     }
-    
+
     // insert
 
     iterator insert(const_iterator pos, const value_type& value) {
@@ -829,13 +832,13 @@ template <class T>
 void list<T>::fill_assign(size_type n, const value_type& value) {
     auto i = begin();
     auto e = end();
-    for (; n > 0 && i != e; --n, ++i) {
+    for (; n > 0 && i != e; --n, ++i)
         *i = value;
-    }
+
     if (n > 0)
         insert(e, n, value);
     else
-        erase(i, 0);
+        erase(i, e);
 }
 
 // 复制 [first, last) 为容器赋值

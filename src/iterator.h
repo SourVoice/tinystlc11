@@ -23,14 +23,14 @@ struct forward_iterator_tag : public input_iterator_tag {};          //
 struct bidirectional_iterator_tag : public forward_iterator_tag {};  // 双向的
 struct random_access_iterator_tag : public bidirectional_iterator_tag {};
 
-template <class Category, class T, class Distance = std::ptrdiff_t,
+template <class Category, class T, class Distance = ptrdiff_t,
           class Pointer = T*, class Reference = T&>
 struct iterator {
     typedef Category            iterator_category;
     typedef T                   value_type;
     typedef Pointer             pointer;
     typedef T*                  reference;
-    typedef T&                  difference_type;
+    typedef Distance            difference_type;
 };
 
 // 迭代器萃取
