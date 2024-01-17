@@ -127,7 +127,7 @@ bool operator<=(stack<T, Container>& lhs, stack<T, Container>& rhs) { return !(r
 
 // 重载全局swap
 template <class T, class Container>
-void swap(stack<T, Container> lhs, stack<T, Container>& rhs) noexcept(lhs.swap(rhs)) {
+void swap(stack<T, Container> lhs, stack<T, Container>& rhs) noexcept(noexcept(lhs.swap(rhs))) {
     lhs.swap(rhs);
 }
 

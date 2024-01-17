@@ -1030,7 +1030,7 @@ bool operator<=(const list<T>& lhs, const list<T>& rhs) {
 
 template <class T>
 bool operator>=(const list<T>& lhs, const list<T>& rhs) {
-    !(lhs < rhs);
+    return !(lhs < rhs);
 }
 
 // 重载swap

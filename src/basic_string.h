@@ -42,7 +42,7 @@ struct char_traits {
         return 0;
     }
 
-    static char_type* copy(char_type* dst, char_type* src, size_t n) {
+    static char_type* copy(char_type* dst, const char_type* src, size_t n) {
         MYSTL_DEBUG(src + n <= dst || dst + n <= src);  // 确保src和dst不会重叠
         char_type* r = dst;
         for (; n != 0; --n, ++dst, ++src)
@@ -85,12 +85,12 @@ struct char_traits<char> {
         return memcmp(s1, s2, n);
     }
 
-    static char_type* copy(char_type* dst, char_type* src, size_t n) noexcept {
+    static char_type* copy(char_type* dst, const char_type* src, size_t n) noexcept {
         MYSTL_DEBUG(src + n <= dst || dst + n <= src);
         return static_cast<char_type*>(std::memcpy(dst, src, n));
     }
 
-    static char_type* move(char_type* dst, char_type* src, size_t n) noexcept {
+    static char_type* move(char_type* dst, const char_type* src, size_t n) noexcept {
         return static_cast<char_type*>(std::memmove(dst, src, n));
     }
 
@@ -112,12 +112,12 @@ struct char_traits<wchar_t> {
         return std::wmemcmp(s1, s2, n);
     }
 
-    static char_type* copy(char_type* dst, char_type* src, size_t n) noexcept {
+    static char_type* copy(char_type* dst, const char_type* src, size_t n) noexcept {
         MYSTL_DEBUG(src + n <= dst || dst + n <= src);
         return static_cast<char_type*>(std::wmemcpy(dst, src, n));
     }
 
-    static char_type* move(char_type* dst, char_type* src, size_t n) noexcept {
+    static char_type* move(char_type* dst, const char_type* src, size_t n) noexcept {
         return static_cast<char_type*>(std::wmemmove(dst, src, n));
     }
 
@@ -276,29 +276,24 @@ public:
         try_init();
     }
 
-    basic_string(size_type n, value_type ch) :
-        buffer_(nullptr), size_(0), cap_(0) {
+    basic_string(size_type n, value_type ch) : buffer_(nullptr), size_(0), cap_(0) {
         fill_init(n, ch);
     }
 
     // 拷贝构造函数(复制), 创造新的对象
-    basic_string(const basic_string& other, size_type pos) :
-        buffer_(nullptr), size_(0), cap_(0) {
+    basic_string(const basic_string& other, size_type pos) : buffer_(nullptr), size_(0), cap_(0) {
         init_from(other.buffer_, pos, other.size_ - pos);
     }
 
-    basic_string(const basic_string& other, size_type pos, size_type count) :
-        buffer_(nullptr), size_(0), cap_(0) {
+    basic_string(const basic_string& other, size_type pos, size_type count) : buffer_(nullptr), size_(0), cap_(0) {
         init_from(other.buffer_, pos, count);
     }
 
-    basic_string(const_pointer str) :
-        buffer_(nullptr), size_(0), cap_(0) {
+    basic_string(const_pointer str) : buffer_(nullptr), size_(0), cap_(0) {
         init_from(str, 0, char_traits::length(str));
     }
 
-    basic_string(const_pointer str, size_type count) :
-        buffer_(nullptr), size_(0), cap_(0) {
+    basic_string(const_pointer str, size_type count) : buffer_(nullptr), size_(0), cap_(0) {
         init_from(str, 0, count);
     }
 
@@ -307,13 +302,12 @@ public:
         copy_init(first, last, iterator_category(first));
     }
 
-    basic_string(const basic_string& rhs) :
-        buffer_(nullptr), size_(0), cap_(0) {
+    basic_string(const basic_string& rhs) : buffer_(nullptr), size_(0), cap_(0) {
         init_from(rhs.buffer_, 0, rhs.size_);
     }
 
     // 移动构造函数, 转移所有权
-    basic_string(const basic_string&& rhs) noexcept :
+    basic_string(basic_string&& rhs) noexcept :
         buffer_(rhs.buffer_), size_(rhs.size_), cap_(rhs.cap_) {
         rhs.buffer_ = nullptr;
         rhs.size_ = 0;
@@ -360,7 +354,7 @@ public:
     }
 
     void reserve(size_type n);
-    void shink_to_fit();
+    void shrink_to_fit();
 
     /*********************************** 元素访问相关操作 ***********************************/
 
@@ -519,14 +513,14 @@ public:
     basic_string& replace(size_type pos1, size_type count1, const basic_string& other,
                           size_type pos2, size_type count2 = npos) {
         THROW_OUT_OF_RANGE_IF(pos1 > size_ || pos2 > other.size_, "basic_string<Char, Traits>::replace() pos out of range");
-        return replace(buffer_ + pos1, count1, other.buffer_ + pos2, count2);
+        return replace_cstr(buffer_ + pos1, count1, other.buffer_ + pos2, count2);
     }
 
     // replace for range
     template <class Iter, typename std::enable_if<MySTL::is_input_iterator<Iter>::value, int>::type = 0>
-    basic_string& replace(const_iterator first, const_iterator last, Iter first2, Iter last2) {
-        MYSTL_DEBUG(begin() <= first && last <= end() && first <= last);
-        return replace_range(first, static_cast<size_type>(last - first), first2, last2);
+    basic_string& replace(const_iterator first1, const_iterator last1, Iter first2, Iter last2) {
+        MYSTL_DEBUG(begin() <= first1 && last1 <= end() && first1 <= last1);
+        return replace_copy(first1, last1, first2, last2);
     }
 
     void reverse() noexcept;
@@ -538,7 +532,7 @@ public:
     size_type find(value_type ch, size_type pos = 0) const noexcept;
     size_type find(const_pointer str, size_type pos = 0) const noexcept;
     size_type find(const_pointer str, size_type pos, size_type count) const noexcept;
-    size_type find(const basic_string& str, size_type pos) const noexcept;
+    size_type find(const basic_string& str, size_type pos = 0) const noexcept;
 
     size_type rfind(value_type ch, size_type pos = npos) const noexcept;
     size_type rfind(const_pointer str, size_type pos = npos) const noexcept;
@@ -553,17 +547,17 @@ public:
     size_type find_first_not_of(value_type ch, size_type pos = 0) const noexcept;
     size_type find_first_not_of(const_pointer str, size_type pos = 0) const noexcept;
     size_type find_first_not_of(const_pointer str, size_type pos, size_type count) const noexcept;
-    size_type find_first_not_of(const basic_string& str, size_type pos) const noexcept;
+    size_type find_first_not_of(const basic_string& str, size_type pos = 0) const noexcept;
 
     size_type find_last_of(value_type ch, size_type pos = 0) const noexcept;
     size_type find_last_of(const_pointer str, size_type pos = 0) const noexcept;
     size_type find_last_of(const_pointer str, size_type pos, size_type count) const noexcept;
-    size_type find_last_of(const basic_string& str, size_type pos) const noexcept;
+    size_type find_last_of(const basic_string& str, size_type pos = 0) const noexcept;
 
     size_type find_last_not_of(value_type ch, size_type pos = 0) const noexcept;
     size_type find_last_not_of(const_pointer str, size_type pos = 0) const noexcept;
     size_type find_last_not_of(const_pointer str, size_type pos, size_type count) const noexcept;
-    size_type find_last_not_of(const basic_string& str, size_type pos) const noexcept;
+    size_type find_last_not_of(const basic_string& str, size_type pos = npos) const noexcept;
 
     size_type count(value_type ch, size_type pos = 0) const noexcept;
 
@@ -634,7 +628,7 @@ private:
 
     // replace
     basic_string& replace_cstr(const_pointer first, size_type count1, const_pointer str, size_type count2);
-    basic_string& replace_fill(const_pointer first, size_type count1, value_type ch, size_type count2);
+    basic_string& replace_fill(const_pointer first, size_type count1, size_type count2, value_type ch);
 
     template <class Iter>
     basic_string& replace_copy(const_pointer first1, const_iterator last1, Iter first2, Iter last2);
@@ -723,7 +717,7 @@ void basic_string<CharType, CharTraits>::
 // 减少不用空间
 template <class CharType, class CharTraits>
 void basic_string<CharType, CharTraits>::
-    shink_to_fit() {
+    shrink_to_fit() {
     if (size_ != cap_) {
         reinsert(size_);
     }
@@ -1278,10 +1272,11 @@ template <class CharType, class CharTraits>
 typename basic_string<CharType, CharTraits>::size_type
 basic_string<CharType, CharTraits>::
 find_last_of(value_type ch, size_type pos) const noexcept {
-    for (auto i = size_ - 1; i >= pos; i--) { // 从后面查找
+    for (auto i = size_ - 1; i >= pos; i--) {  // 从后面查找
         if (*(buffer_ + i) == ch)
             return i;
     }
+    return npos;
 }
 
 // 从下标 pos 开始查找与字符串 str 的字符中不相等的最后一个位置
@@ -1541,6 +1536,7 @@ compare_cstr(const_pointer s1, size_type n1,
     if (res != 0) return res;
     if (n1 < n2) return -1;
     if (n1 > n2) return 1;
+    return 0;
 }
 
 // relplace_cstr， 用str替换[first, first + count1)的字符
@@ -1577,7 +1573,7 @@ template <class CharType, class CharTraits>
 basic_string<CharType, CharTraits>&
 basic_string<CharType, CharTraits>::
 replace_fill(const_pointer first, size_type count1,
-             value_type ch, size_type count2) {
+             size_type count2, value_type ch) {
     if (static_cast<size_type>(cend() - first) < count1) {
         count1 = cend() - first;
     }
@@ -1674,7 +1670,7 @@ reallocate_and_copy(iterator pos, const_iterator first, const_iterator last) {
     auto            e1 = char_traits::move(new_buffer, buffer_, r) + r;
     auto            e2 = uninitialized_copy_n(first, n, e1) + n;
     char_traits::move(e2, buffer_ + r, size_ - r); // 保留pos后面的内容
-    data_allocator::allocate(buffer_, old_cap);
+    data_allocator::deallocate(buffer_, old_cap);
     buffer_ = new_buffer;
     size_ += n;
     cap_ = new_cap;
@@ -1723,7 +1719,7 @@ operator+(const basic_string<CharType, CharTraits>& lhs,
 template <class CharType, class CharTraits>
 basic_string<CharType, CharTraits>
 operator+(const basic_string<CharType, CharTraits>& lhs,
-          CharType*                                 ch) {
+          CharType                                  ch) {
     basic_string<CharType, CharTraits> tmp(lhs);
     tmp.append(1, ch);
     return tmp;
@@ -1731,8 +1727,8 @@ operator+(const basic_string<CharType, CharTraits>& lhs,
 
 template <class CharType, class CharTraits>
 basic_string<CharType, CharTraits>
-operator+(const basic_string<CharType, CharTraits>&& lhs,
-          const basic_string<CharType, CharTraits>&  rhs) {
+operator+(basic_string<CharType, CharTraits>&&      lhs,
+          const basic_string<CharType, CharTraits>& rhs) {
     basic_string<CharType, CharTraits> tmp(MySTL::move(lhs));
     tmp.append(rhs);
     return tmp;
@@ -1740,8 +1736,8 @@ operator+(const basic_string<CharType, CharTraits>&& lhs,
 
 template <class CharType, class CharTraits>
 basic_string<CharType, CharTraits>
-operator+(const basic_string<CharType, CharTraits>&  lhs,
-          const basic_string<CharType, CharTraits>&& rhs) {
+operator+(const basic_string<CharType, CharTraits>& lhs,
+          basic_string<CharType, CharTraits>&&      rhs) {
     basic_string<CharType, CharTraits> tmp(MySTL::move(rhs));
     tmp.insert(tmp.begin(), lhs.begin(), lhs.end());
     return tmp;
@@ -1749,8 +1745,8 @@ operator+(const basic_string<CharType, CharTraits>&  lhs,
 
 template <class CharType, class CharTraits>
 basic_string<CharType, CharTraits>
-operator+(const basic_string<CharType, CharTraits>&& lhs,
-          const basic_string<CharType, CharTraits>&& rhs) {
+operator+(basic_string<CharType, CharTraits>&& lhs,
+          basic_string<CharType, CharTraits>&& rhs) {
     basic_string<CharType, CharTraits> tmp(MySTL::move(lhs));
     tmp.append(rhs);
     return tmp;
