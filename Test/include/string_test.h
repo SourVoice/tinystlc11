@@ -1,13 +1,12 @@
 #ifndef MY_STRING_TEST_H
 #define MY_STRING_TEST_H
-// 测试 deque 接口和 push_front/push_back性能
+// 测试 string 接口
 
 // 标准
-#include <deque> 
+#include <string>
 #include <algorithm>
 #include <iostream>
 #include <numeric>
-#include <functional>
 
 #include "../../src/astring.h"
 
