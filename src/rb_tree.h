@@ -93,8 +93,6 @@ struct rb_tree_node_base {
     typedef rb_tree_node<T>*      node_ptr;
     typedef rb_tree_color_type    color_type;
 
-    rb_tree_color_type color;
-
     base_ptr   parent;
     base_ptr   left;
     base_ptr   right;
@@ -240,11 +238,11 @@ struct rb_tree_const_iterator: public rb_tree_iterator_base<T> {
     using rb_tree_iterator_base<T>::node;
 
     // 构造函数
-    rb_tree_iterator() {}
-    rb_tree_iterator(base_ptr x) { node = x; }
-    rb_tree_iterator(node_ptr x) { node = x; }
-    rb_tree_iterator(const iterator& rhs) { node = rhs.node; }
-    rb_tree_iterator(const const_iterator& rhs) { node = rhs.node; }
+    rb_tree_const_iterator() {}
+    rb_tree_const_iterator(base_ptr x) { node = x; }
+    rb_tree_const_iterator(node_ptr x) { node = x; }
+    rb_tree_const_iterator(const iterator& rhs) { node = rhs.node; }
+    rb_tree_const_iterator(const const_iterator& rhs) { node = rhs.node; }
 
     // 重载操作符
     reference operator*() const { return node->get_node_ptr()->value; }
@@ -320,6 +318,7 @@ Nodeptr rb_tree_next(Nodeptr node) noexcept {
      */
     while (!rb_tree_is_lchild(node))
         node = node->parent;
+    return node->parent;
 }
 
 // 左旋，参数一为左旋节点，参数二为根节点
@@ -362,7 +361,6 @@ void rb_tree_rotate_right(Nodeptr x, Nodeptr& root) noexcept {
     x->parent = y;
 }
 
-// TODO: 注释
 /** 
  * @brief
  * @param x 
@@ -380,7 +378,7 @@ case 1：当前节点父节点为红，且uncle为红
 template <class Nodeptr>
 void rb_tree_insert_rebalance(Nodeptr x, Nodeptr& root) noexcept {
     rb_tree_set_red(x);
-    while (x != nullptr && rb_tree_is_red(x->parent)) {
+    while (x != root && rb_tree_is_red(x->parent)) {
         if (rb_tree_is_lchild(x->parent)) { // case 1, case2, case3 所有附条件均为当前节点是其父节点的左子节点
             auto uncle = x->parent->parent->right;
             if (uncle != nullptr && rb_tree_is_red(uncle)) {
@@ -410,7 +408,7 @@ void rb_tree_insert_rebalance(Nodeptr x, Nodeptr& root) noexcept {
                 x = x->parent->parent;
                 rb_tree_set_red(x);
             } else { // uncle为黑
-                if (!rb_tree_is_lchild(x)) {
+                if (rb_tree_is_lchild(x)) {
                     // case2： 
                     x = x->parent;
                     rb_tree_rotate_right(x, root);
@@ -435,7 +433,7 @@ void rb_tree_insert_rebalance(Nodeptr x, Nodeptr& root) noexcept {
  */
 // FIGUREOUT: erase与insert reblance的异同
 template <class Nodeptr>
-void rb_tree_erase_reblance(Nodeptr z, Nodeptr& root, Nodeptr& leftmost, Nodeptr& rightmost) {
+Nodeptr rb_tree_erase_reblance(Nodeptr z, Nodeptr& root, Nodeptr& leftmost, Nodeptr& rightmost) {
     auto    y = (z->left || z->right == nullptr) ? z : rb_tree_next(z);
     auto    x = y->left != nullptr ? y->left : y->right;
     Nodeptr xp = nullptr;  // parent of x
@@ -571,7 +569,7 @@ class rb_tree {
 public:
     // 简化
     typedef rb_tree_traits<T>                        tree_traits;
-    typedef rb_tree_value_traits                     value_traits;
+    typedef rb_tree_value_traits<T>                  value_traits;
     // 红黑树萃取器
     typedef typename tree_traits::base_type          base_type;
     typedef typename tree_traits::base_ptr           base_ptr;
@@ -684,7 +682,7 @@ public:
 
     /*********************************** 容器操作 ***********************************/
     // 容量
-    bool      empty() const noexcept { return node_count_ = 0; }
+    bool      empty() const noexcept { return node_count_ == 0; }
     size_type size() const noexcept { return node_count_; }
     size_type max_size() const noexcept { return static_cast<size_type>(-1); }
 
@@ -743,7 +741,7 @@ public:
 
     size_type      count_multi(const key_type& key) const {
         auto p = equal_range_multi(key);
-        return static<size_type>(MySTL::distance(p.first, p.second));
+        return static_cast<size_type>(MySTL::distance(p.first, p.second));
     }
 
     size_type      count_unique(const key_type& key) const { return find(key) != end() ? 1 : 0; }
@@ -759,7 +757,7 @@ public:
         return MySTL::pair<iterator, iterator>(lower_bound(key), upper_bound(key));
     }
     MySTL::pair<const_iterator, const_iterator>
-    equal_range_multi(const key_type& key) {
+    equal_range_multi(const key_type& key) const {
         return MySTL::pair<const_iterator, const_iterator>(lower_bound(key), upper_bound(key));
     }
 
@@ -770,7 +768,7 @@ public:
         return it == end() ? MySTL::make_pair(it, it) : MySTL::make_pair(it, ++next);
     }
     MySTL::pair<const_iterator, const_iterator>
-    equal_range_unique(const key_type& key) {
+    equal_range_unique(const key_type& key) const {
         const_iterator it = find(key);
         auto next = it;
         return it == end() ? MySTL::make_pair(it, it) : MySTL::make_pair(it, ++next);
@@ -844,7 +842,7 @@ rb_tree<T, Compare>::emplace_unique(Args&&... args) {
         return MySTL::make_pair(ret, true);
     }
     destory_node(np);
-    return MySTL::make_pair(iterator(res.first, first), false);
+    return MySTL::make_pair(iterator(res.first.first), false);
 }
 
 /**
@@ -888,7 +886,7 @@ rb_tree<T, Compare>::emplace_multi_use_hint(typename rb_tree<T, Compare>::iterat
 template <class T, class Compare>
 template <class... Args>
 typename rb_tree<T, Compare>::iterator
-rb_tree<T, Compare>::emplace_unique_use_hint(typename rb_tree<T, Compare>::iterator hint, Args&&... args) {
+rb_tree<T, Compare>::emplace_unique_use_hint(iterator hint, Args&&... args) {
     THROW_LENGTH_ERROR_IF(node_count_ > max_size() - 1, "rb_tree<T, Comp>'s size too big");
 
     node_ptr np = create_node(MySTL::forward<Args>(args)...);
@@ -902,9 +900,11 @@ rb_tree<T, Compare>::emplace_unique_use_hint(typename rb_tree<T, Compare>::itera
             return insert_node_at(hint.node, np, true);
         } else {
             auto res = get_insert_unique_pos(value_traits::get_key(np->value));
-            if (res.second) {
-                return insert_node_at(res.first.first, np, res.first.second);
+            if (!res.second) {
+                destory_node(np);
+                return res.first.first;
             }
+            return insert_node_at(res.first.first, np, res.first.second);
         }
     } else if (hint == end()) {
         if (key_comp_(value_traits::get_key(rightmost()->get_node_ptr()->value), key)) {
@@ -943,7 +943,7 @@ rb_tree<T, Compare>::insert_unique(const value_type& value) {
         return MySTL::make_pair(it, pos.second);
     }
 
-    return MySTL::make_pair(res.first.fisrt, pos.second);
+    return MySTL::make_pair(pos.first.fisrt, pos.second);
 }
 
 /**
@@ -978,14 +978,16 @@ rb_tree<T, Compare>::erase_multi(const key_type & key) {
 /**
  * @brief 删除键为 key 的元素，返回删除的个数
  * @return 删除的个数
-  */
+ */
 template <class T, class Compare>
 typename rb_tree<T, Compare>::size_type
 rb_tree<T, Compare>::erase_unique(const key_type& key) {
-    auto      p = equal_range_unique(value_traits::get_key(*hint));
-    size_type n = MySTL::distance(p.first, p.second);
-    erase(p.first, p.second);
-    return n;
+    auto it = find(key);
+    if (it != end()) {
+        erase(it);
+        return 1;
+    }
+    return 0;
 }
 
 /**
@@ -1189,7 +1191,7 @@ rb_tree<T, Compare>::clone_node(base_ptr x) {
 // 销毁节点
 template <class T, class Compare>
 void rb_tree<T, Compare>::destory_node(node_ptr p) {
-    data_allocator::destroy(MySTL::address_of(&p->value));
+    data_allocator::destroy(&p->value);
     node_allocator::deallocate(p);
 }
 
@@ -1372,7 +1374,7 @@ rb_tree<T, Compare>::insert_unique_use_hint(iterator hint, key_type key, node_pt
         else if (np->left == nullptr)
             return insert_node_at(np, node, true);
     }
-    auto pos = get_insert_multi_pos(key);
+    auto pos = get_insert_unique_pos(key);
     if (!pos.second) {
         destory_node(node);
         return pos.first.first;
@@ -1393,7 +1395,7 @@ rb_tree<T, Compare>::copy_from(base_ptr x, base_ptr p) {
     top->parent = p;
     try {
         if (x->right)
-            top->righ = copy_from(x->right, top);
+            top->right = copy_from(x->right, top);
         p = top;
         x = x->left;
         while (x != nullptr) {

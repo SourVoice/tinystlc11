@@ -143,7 +143,7 @@ public:
 
     bool      empty() const noexcept { return tree_.empty(); }
     size_type size() const noexcept { return tree_.size(); }
-    size_type max_size() const noexcept { return tree.max_size(); }
+    size_type max_size() const noexcept { return tree_.max_size(); }
 
     // 插入 / 删除
 
@@ -163,7 +163,7 @@ public:
     MySTL::pair<iterator, bool> insert(const value_type& value) { return tree_.insert_unique(value); }
     MySTL::pair<iterator, bool> insert(value_type&& value) { return tree_.insert_unique(MySTL::move(value)); }
 
-    iterator insert(iterator hint, const value_type& value){return tree_.insert_unique(hint, value)};
+    iterator insert(iterator hint, const value_type& value) { return tree_.insert_unique(hint, value); }
     iterator insert(iterator hint, value_type&& value) { return tree_.insert_unique(hint, MySTL::move(value)); }
 
     template <class InputIterator>
@@ -173,7 +173,7 @@ public:
 
     void      erase(iterator pos) { tree_.erase(pos); }
     void      erase(iterator first, iterator last) { tree_.erase(first, last); }
-    size_type erase(cosnt key_type& key) { return tree_.erase_unique(key); }
+    size_type erase(const key_type& key) { return tree_.erase_unique(key); }
 
     void clear() { tree_.clear(); }
 
@@ -193,9 +193,9 @@ public:
     MySTL::pair<iterator, iterator>
     equal_range(const key_type& key) { return tree_.equal_range_unique(key); }
     MySTL::pair<const_iterator, const_iterator>
-    equal_range(const key_type& key) { return tree_.equal_range_unique(key;) }
+    equal_range(const key_type& key) const { return tree_.equal_range_unique(key); }
 
-    void swap(set& rhs) noexcept { tree_.swap(rhs.tree_); }
+    void swap(map& rhs) noexcept { tree_.swap(rhs.tree_); }
 
 public:
     friend bool operator==(const map& lhs, const map& rhs) { return lhs.tree_ == rhs.tree_; }
@@ -356,7 +356,7 @@ public:
 
     bool      empty() const noexcept { return tree_.empty(); }
     size_type size() const noexcept { return tree_.size(); }
-    size_type max_size() const noexcept { return tree.max_size(); }
+    size_type max_size() const noexcept { return tree_.max_size(); }
 
     // 插入 / 删除
 
@@ -376,7 +376,7 @@ public:
     MySTL::pair<iterator, bool> insert(const value_type& value) { return tree_.insert_multi(value); }
     MySTL::pair<iterator, bool> insert(value_type&& value) { return tree_.insert_multi(MySTL::move(value)); }
 
-    iterator insert(iterator hint, const value_type& value){return tree_.insert_multi(hint, value)};
+    iterator insert(iterator hint, const value_type& value) { return tree_.insert_multi(hint, value); }
     iterator insert(iterator hint, value_type&& value) { return tree_.insert_multi(hint, MySTL::move(value)); }
 
     template <class InputIterator>
@@ -386,7 +386,7 @@ public:
 
     void      erase(iterator pos) { tree_.erase(pos); }
     void      erase(iterator first, iterator last) { tree_.erase(first, last); }
-    size_type erase(cosnt key_type& key) { return tree_.erase_multi(key); }
+    size_type erase(const key_type& key) { return tree_.erase_multi(key); }
 
     void clear() { tree_.clear(); }
 
@@ -406,9 +406,9 @@ public:
     MySTL::pair<iterator, iterator>
     equal_range(const key_type& key) { return tree_.equal_range_multi(key); }
     MySTL::pair<const_iterator, const_iterator>
-    equal_range(const key_type& key) { return tree_.equal_range_multi(key;) }
+    equal_range(const key_type& key) const { return tree_.equal_range_multi(key); }
 
-    void swap(set& rhs) noexcept { tree_.swap(rhs.tree_); }
+    void swap(multimap& rhs) noexcept { tree_.swap(rhs.tree_); }
 
 public:
     friend bool operator==(const multimap& lhs, const multimap& rhs) { return lhs.tree_ == rhs.tree_; }
