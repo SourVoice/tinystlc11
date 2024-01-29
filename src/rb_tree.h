@@ -431,10 +431,9 @@ void rb_tree_insert_rebalance(Nodeptr x, Nodeptr& root) noexcept {
  * @param leftmost 最小节点
  * @param rightmost 最大节点
  */
-// FIGUREOUT: erase与insert reblance的异同
 template <class Nodeptr>
 Nodeptr rb_tree_erase_reblance(Nodeptr z, Nodeptr& root, Nodeptr& leftmost, Nodeptr& rightmost) {
-    auto    y = (z->left || z->right == nullptr) ? z : rb_tree_next(z);
+    auto    y = (z->left == nullptr || z->right == nullptr) ? z : rb_tree_next(z);
     auto    x = y->left != nullptr ? y->left : y->right;
     Nodeptr xp = nullptr;  // parent of x
 
@@ -459,7 +458,7 @@ Nodeptr rb_tree_erase_reblance(Nodeptr z, Nodeptr& root, Nodeptr& leftmost, Node
         else if (rb_tree_is_lchild(z))
             z->parent->left = y;
         else
-            z->parent->left = y;
+            z->parent->right = y;
         y->parent = z->parent;
         MySTL::swap(y->color, z->color);
         y = z;
@@ -476,7 +475,7 @@ Nodeptr rb_tree_erase_reblance(Nodeptr z, Nodeptr& root, Nodeptr& leftmost, Node
 
         if (leftmost == z)
             leftmost = x == nullptr ? xp : rb_tree_min(x);
-        else if (rightmost == z)
+        if (rightmost == z)
             rightmost = x == nullptr ? xp : rb_tree_max(x);
     }
 
@@ -706,7 +705,7 @@ public:
     iterator insert_multi(iterator hint, value_type&& value) { return emplace_multi_use_hint(hint, MySTL::move(value)); }
 
     template <class InputIterator>
-    void insesrt_multi(InputIterator first, InputIterator last) {
+    void insert_multi(InputIterator first, InputIterator last) {
         size_type n = MySTL::distance(first, last);
         THROW_LENGTH_ERROR_IF(node_count_ > max_size() - n, "rb_tree<T, Compare>' s size too big");
         for (; n > 0 ; --n, ++first)

@@ -363,7 +363,7 @@ public:
     // empalce
 
     template <class... Args>
-    MySTL::pair<iterator, bool> emplace(Args&&... args) {
+    iterator emplace(Args&&... args) {
         return tree_.emplace_multi(MySTL::forward<Args>(args)...);
     }
     template <class... Args>
@@ -373,8 +373,8 @@ public:
 
     // insert / only use insert_multi
 
-    MySTL::pair<iterator, bool> insert(const value_type& value) { return tree_.insert_multi(value); }
-    MySTL::pair<iterator, bool> insert(value_type&& value) { return tree_.insert_multi(MySTL::move(value)); }
+    iterator insert(const value_type& value) { return tree_.insert_multi(value); }
+    iterator insert(value_type&& value) { return tree_.insert_multi(MySTL::move(value)); }
 
     iterator insert(iterator hint, const value_type& value) { return tree_.insert_multi(hint, value); }
     iterator insert(iterator hint, value_type&& value) { return tree_.insert_multi(hint, MySTL::move(value)); }
