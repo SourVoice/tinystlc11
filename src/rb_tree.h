@@ -942,7 +942,7 @@ rb_tree<T, Compare>::insert_unique(const value_type& value) {
         return MySTL::make_pair(it, pos.second);
     }
 
-    return MySTL::make_pair(pos.first.fisrt, pos.second);
+    return MySTL::make_pair(pos.first.first, pos.second);
 }
 
 /**
