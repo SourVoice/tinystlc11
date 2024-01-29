@@ -151,7 +151,7 @@ protected:
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
             UnitTest::GetInstance()->CurrentTestCase->nFailed++;       \
-            std::cout << red << " EXPECT_TRUE failed!\n"               \
+            std::cout << red << " EXPECT_TRUE failed!\n";               \
         }                                                              \
     } while (0)
 
@@ -168,7 +168,7 @@ protected:
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
             UnitTest::GetInstance()->CurrentTestCase->nFailed++;       \
-            std::cout << red << " EXPECT_FALSE failed!\n"              \
+            std::cout << red << " EXPECT_FALSE failed!\n";              \
         }                                                              \
     } while (0)
 
@@ -201,7 +201,7 @@ protected:
 #define EXPECT_EQ(v1, v2)                                              \
     do {                                                               \
         if (v1 == v2) {                                                \
-            UnitTest::GetInstance()->CurrentTestCase->nPass++;         \
+            UnitTest::GetInstance()->CurrentTestCase->nPassed++;       \
             std::cout << green << " EXPECT_EQ succeeded!\n";           \
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
@@ -215,11 +215,11 @@ protected:
 /**
  * 比较断言
  * EXPECT_NE(v1, v2) 验证条件: v1 != v2
-*/
+ */
 #define EXPECT_NE(v1, v2)                                              \
     do {                                                               \
         if (v1 != v2) {                                                \
-            UnitTest::GetInstance()->CurrentTestCase->nPass++;         \
+            UnitTest::GetInstance()->CurrentTestCase->nPassed++;       \
             std::cout << green << " EXPECT_NE succeeded!\n";           \
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
@@ -232,11 +232,11 @@ protected:
 
 /**
  * EXPECT_LT(v1, v2) 验证条件: v1 <  v2
-*/
+ */
 #define EXPECT_LT(v1, v2)                                              \
     do {                                                               \
         if (v1 < v2) {                                                 \
-            UnitTest::GetInstance()->CurrentTestCase->nPass++;         \
+            UnitTest::GetInstance()->CurrentTestCase->nPassed++;       \
             std::cout << green << " EXPECT_LT succeeded!\n";           \
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
@@ -249,11 +249,11 @@ protected:
 
 /**
  * EXPECT_LE(v1, v2) 验证条件: v1 <= v2
-*/
+ */
 #define EXPECT_LE(v1, v2)                                              \
     do {                                                               \
         if (v1 <= v2) {                                                \
-            UnitTest::GetInstance()->CurrentTestCase->nPass++;         \
+            UnitTest::GetInstance()->CurrentTestCase->nPassed++;       \
             std::cout << green << " EXPECT_LE succeeded!\n";           \
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
@@ -266,11 +266,11 @@ protected:
 
 /**
  * EXPECT_GT(v1, v2) 验证条件: v1 > v2
-*/
+ */
 #define EXPECT_GT(v1, v2)                                              \
     do {                                                               \
         if (v1 > v2) {                                                 \
-            UnitTest::GetInstance()->CurrentTestCase->nPass++;         \
+            UnitTest::GetInstance()->CurrentTestCase->nPassed++;       \
             std::cout << green << " EXPECT_GT succeeded!\n";           \
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
@@ -283,11 +283,11 @@ protected:
 
 /**
  * EXPECT_GE(v1, v2) 验证条件: v1 >= v2
-*/
+ */
 #define EXPECT_GE(v1, v2)                                              \
     do {                                                               \
         if (v1 >= v2) {                                                \
-            UnitTest::GetInstance()->CurrentTestCase->nPass++;         \
+            UnitTest::GetInstance()->CurrentTestCase->nPassed++;       \
             std::cout << green << " EXPECT_GE succeeded!\n";           \
         } else {                                                       \
             UnitTest::GetInstance()->CurrentTestCase->nTestResult = 0; \
@@ -586,17 +586,16 @@ protected:
         std::cout << " After " << fun_name << " : " \
                   << std::endl;                     \
         fun;                                        \
-        STR_COUT(con);                              \
+        STR_COUT(str);                              \
     } while (0)
 
-// 输出容器调用函数的值
-#define CON_FUN_VALUE(fun)                                    \
+// 输出调用函数后的返回值
+#define FUN_VALUE(fun)                                        \
     do {                                                      \
         std::string fun_name = #fun;                          \
         std::cout << " " << fun_name << " : " << fun << "\n"; \
     } while (0)
 
-// 输出测试数量级
 void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
 {
   std::string str1, str2, str3;
@@ -611,6 +610,7 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
   std::cout << std::setw(wide) << str3 << "\n";
 }
 
+// 输出测试数量级
 #define TEST_LEN(len1, len2, len3, wide) \
   test_len(len1, len2, len3, wide)
 
@@ -692,10 +692,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
     FUN_TEST_FORMAT1(std::con, fun, arg, len1);      \
     FUN_TEST_FORMAT1(std::con, fun, arg, len2);      \
     FUN_TEST_FORMAT1(std::con, fun, arg, len3);      \
-    std::cout << "\n|        mystl        |";        \
-    FUN_TEST_FORMAT1(mystl::con, fun, arg, len1);    \
-    FUN_TEST_FORMAT1(mystl::con, fun, arg, len2);    \
-    FUN_TEST_FORMAT1(mystl::con, fun, arg, len3);
+    std::cout << "\n|        MySTL        |";        \
+    FUN_TEST_FORMAT1(MySTL::con, fun, arg, len1);    \
+    FUN_TEST_FORMAT1(MySTL::con, fun, arg, len2);    \
+    FUN_TEST_FORMAT1(MySTL::con, fun, arg, len3);
 
 #define CON_TEST_P2(con, fun, arg1, arg2, len1, len2, len3) \
     TEST_LEN(len1, len2, len3, WIDE);                       \
@@ -703,10 +703,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
     FUN_TEST_FORMAT2(std::con, fun, arg1, arg2, len1);      \
     FUN_TEST_FORMAT2(std::con, fun, arg1, arg2, len2);      \
     FUN_TEST_FORMAT2(std::con, fun, arg1, arg2, len3);      \
-    std::cout << "\n|        mystl        |";               \
-    FUN_TEST_FORMAT2(mystl::con, fun, arg1, arg2, len1);    \
-    FUN_TEST_FORMAT2(mystl::con, fun, arg1, arg2, len2);    \
-    FUN_TEST_FORMAT2(mystl::con, fun, arg1, arg2, len3);
+    std::cout << "\n|        MySTL        |";               \
+    FUN_TEST_FORMAT2(MySTL::con, fun, arg1, arg2, len1);    \
+    FUN_TEST_FORMAT2(MySTL::con, fun, arg1, arg2, len2);    \
+    FUN_TEST_FORMAT2(MySTL::con, fun, arg1, arg2, len3);
 
 #define MAP_EMPLACE_TEST(con, len1, len2, len3) \
     TEST_LEN(len1, len2, len3, WIDE);           \
@@ -714,10 +714,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
     MAP_EMPLACE_DO_TEST(std, con, len1);        \
     MAP_EMPLACE_DO_TEST(std, con, len2);        \
     MAP_EMPLACE_DO_TEST(std, con, len3);        \
-    std::cout << "\n|        mystl        |";   \
-    MAP_EMPLACE_DO_TEST(mystl, con, len1);      \
-    MAP_EMPLACE_DO_TEST(mystl, con, len2);      \
-    MAP_EMPLACE_DO_TEST(mystl, con, len3);
+    std::cout << "\n|        MySTL        |";   \
+    MAP_EMPLACE_DO_TEST(MySTL, con, len1);      \
+    MAP_EMPLACE_DO_TEST(MySTL, con, len2);      \
+    MAP_EMPLACE_DO_TEST(MySTL, con, len3);
 
 #define LIST_SORT_TEST(len1, len2, len3)      \
     TEST_LEN(len1, len2, len3, WIDE);         \
@@ -725,10 +725,10 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
     LIST_SORT_DO_TEST(std, len1);             \
     LIST_SORT_DO_TEST(std, len2);             \
     LIST_SORT_DO_TEST(std, len3);             \
-    std::cout << "\n|        mystl        |"; \
-    LIST_SORT_DO_TEST(mystl, len1);           \
-    LIST_SORT_DO_TEST(mystl, len2);           \
-    LIST_SORT_DO_TEST(mystl, len3);
+    std::cout << "\n|        MySTL        |"; \
+    LIST_SORT_DO_TEST(MySTL, len1);           \
+    LIST_SORT_DO_TEST(MySTL, len2);           \
+    LIST_SORT_DO_TEST(MySTL, len3);
 
 // 简单测试的宏定义
 #define TEST(testcase_name) \
@@ -750,7 +750,8 @@ void test_len(size_t len1, size_t len2, size_t len3, size_t wide)
 #define LARGER_TEST_DATA_ON 0
 #endif // !LARGER_TEST_DATA_ON
 
-}  // namespace test
+}  // namespace MySTL::test
+
 }  // namespace MySTL
 
 #endif // !MY_TEST_H
